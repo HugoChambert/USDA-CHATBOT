@@ -13,7 +13,7 @@ const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/
 
 // PowerDrill AI API setup - Add your PowerDrill API details here
 const POWERDRILL_API_KEY = "proj_sk_n-YWstY21oc2Fvc2R4aDQ5OTA3cW96cmZ3NHZjYzoxNzYyNzI3OTE1NDUwOjA6MDoyOC9xZGF5UnI1cEVHL1RZOFFCNlVGZFRVTGJnWWZHVDVyZDdFZE5ZVklJ"; // Add your PowerDrill API key here
-const POWERDRILL_API_URL = "https://ai.data.cloud/api/v2/team/datasets/dset-cmhqy4pv6acsw07qojkpdla3a/datasources"; // Add your PowerDrill API URL here, e.g., "https://api.powerdrill.ai/generate"
+const POWERDRILL_API_URL = "https://ai.data.cloud/api/v2/team/datasets/{dset-cmhqy4pv6acsw07qojkpdla3a}/query"; // Add your PowerDrill API URL here, e.g., "https://api.powerdrill.ai/generate"
 
 
 const userData = {
@@ -197,6 +197,7 @@ sendMessage.addEventListener("click", (e) => handleOutgoingMessage(e));
 document.querySelector("#file-upload").addEventListener("click", () => fileInput.click());
 closeChatbot.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
 chatbotToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
+
 
 
 
