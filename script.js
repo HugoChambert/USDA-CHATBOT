@@ -8,10 +8,14 @@ const chatbotToggler = document.querySelector("#chatbot-toggler");
 const closeChatbot = document.querySelector("#close-chatbot");
 
 // API setup
-const API_KEY = "AIzaSyDrejWfjgE4D0--u6JnVXOIvze2PQxS51E";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+const GEMINI_API_KEY = "AIzaSyDrejWfjgE4D0--u6JnVXOIvze2PQxS51E";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-// Initialize user message and file data
+// PowerDrill AI API setup - Add your PowerDrill API details here
+const POWERDRILL_API_KEY = "proj_sk_n-YWstY21oc2Fvc2R4aDQ5OTA3cW96cmZ3NHZjYzoxNzYyNzI3OTE1NDUwOjA6MDoyOC9xZGF5UnI1cEVHL1RZOFFCNlVGZFRVTGJnWWZHVDVyZDdFZE5ZVklJ"; // Add your PowerDrill API key here
+const POWERDRILL_API_URL = "https://powerdrill.ai/dataset-list/dset-cmhsab2r2egsr07r4qw3xpzht/datasources"; // Add your PowerDrill API URL here, e.g., "https://api.powerdrill.ai/generate"
+
+
 const userData = {
   message: null,
   file: {
@@ -20,11 +24,10 @@ const userData = {
   },
 };
 
-// Store chat history
+
 const chatHistory = [];
 const initialInputHeight = messageInput.scrollHeight;
 
-// Create message element with dynamic classes and return it
 const createMessageElement = (content, ...classes) => {
   const div = document.createElement("div");
   div.classList.add("message", ...classes);
@@ -32,54 +35,68 @@ const createMessageElement = (content, ...classes) => {
   return div;
 };
 
-// Generate bot response using API
 const generateBotResponse = async (incomingMessageDiv) => {
   const messageElement = incomingMessageDiv.querySelector(".message-text");
 
-  // Add user message to chat history
+  
   chatHistory.push({
     role: "user",
     parts: [{ text: userData.message }, ...(userData.file.data ? [{ inline_data: userData.file }] : [])],
   });
 
-  // API request options
-  const requestOptions = {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: chatHistory,
-    }),
-  };
-
   try {
-    // Fetch bot response from API
-    const response = await fetch(API_URL, requestOptions);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error.message);
+    
+    const powerdrillRequestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: chatHistory,
+      }),
+    };
 
-    // Extract and display bot's response text
-    const apiResponseText = data.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g, "$1").trim();
+    const powerdrillResponse = await fetch(POWERDRILL_API_URL, powerdrillRequestOptions);
+    const powerdrillData = await powerdrillResponse.json();
+    if (!powerdrillResponse.ok) throw new Error(powerdrillData.error?.message || "PowerDrill API error");
+
+    const powerdrillText = powerdrillData.candidates?.[0]?.content?.parts?.[0]?.text || powerdrillData.response || powerdrillData.message;
+
+    const geminiRequestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          ...chatHistory,
+          { role: "model", parts: [{ text: powerdrillText }] },
+          { role: "user", parts: [{ text: "Refine and improve this response: " + powerdrillText }] },
+        ],
+      }),
+    };
+
+    const geminiResponse = await fetch(GEMINI_API_URL, geminiRequestOptions);
+    const geminiData = await geminiResponse.json();
+    if (!geminiResponse.ok) throw new Error(geminiData.error.message);
+
+    const apiResponseText = geminiData.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g, "$1").trim();
     messageElement.innerText = apiResponseText;
 
-    // Add bot response to chat history
     chatHistory.push({
       role: "model",
       parts: [{ text: apiResponseText }],
     });
   } catch (error) {
-    // Handle error in API response
+    
     console.log(error);
     messageElement.innerText = error.message;
     messageElement.style.color = "#ff0000";
   } finally {
-    // Reset user's file data, removing thinking indicator and scroll chat to bottom
+ 
     userData.file = {};
     incomingMessageDiv.classList.remove("thinking");
     chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
   }
 };
 
-// Handle outgoing user messages
+
 const handleOutgoingMessage = (e) => {
   e.preventDefault();
   userData.message = messageInput.value.trim();
@@ -87,7 +104,7 @@ const handleOutgoingMessage = (e) => {
   messageInput.dispatchEvent(new Event("input"));
   fileUploadWrapper.classList.remove("file-uploaded");
 
-  // Create and display user message
+  
   const messageContent = `<div class="message-text"></div>
                           ${userData.file.data ? `<img src="data:${userData.file.mime_type};base64,${userData.file.data}" class="attachment" />` : ""}`;
 
@@ -96,7 +113,7 @@ const handleOutgoingMessage = (e) => {
   chatBody.appendChild(outgoingMessageDiv);
   chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
 
-  // Simulate bot response with thinking indicator after a delay
+
   setTimeout(() => {
     const messageContent = ` <svg class="bot-avatar"xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#FFFFFF"><path d="M480-80q-134 0-227-93t-93-227v-200q0-122 96-201t224-79q128 0 224 79t96 201v440q0 33-23.5 56.5T720-80H480Zm0-80h80q-19-25-29.5-55.5T520-280v-42q-10 1-20 1.5t-20 .5q-67 0-129.5-23.5T240-415v15q0 100 70 170t170 70Zm120-120q0 50 35 85t85 35v-255q-26 26-56 44.5T600-340v60ZM480-400q95 0 167.5-55.5T720-600q0-35-12-65.5T674-720q-64 2-109 48t-45 112q0 17-11.5 28.5T480-520q-17 0-28.5-11.5T440-560q0-66-45-111t-109-48q-22 24-34 54t-12 65q0 89 72.5 144.5T480-400ZM340-560q-17 0-28.5-11.5T300-600q0-17 11.5-28.5T340-640q17 0 28.5 11.5T380-600q0 17-11.5 28.5T340-560Zm280 0q-17 0-28.5-11.5T580-600q0-17 11.5-28.5T620-640q17 0 28.5 11.5T660-600q0 17-11.5 28.5T620-560ZM370-778q34 14 62 37t48 52q20-29 47.5-52t61.5-37q-25-11-52.5-16.5T480-800q-29 0-56.5 5.5T370-778Zm430 618H520h280Zm-320 0q-100 0-170-70t-70-170q0 100 70 170t170 70h80-80Zm120-120q0 50 35 85t85 35q-50 0-85-35t-35-85ZM480-689Z"/></svg>
           <div class="message-text">
@@ -115,14 +132,14 @@ const handleOutgoingMessage = (e) => {
   }, 600);
 };
 
-// Adjust input field height dynamically
+
 messageInput.addEventListener("input", () => {
   messageInput.style.height = `${initialInputHeight}px`;
   messageInput.style.height = `${messageInput.scrollHeight}px`;
   document.querySelector(".chat-form").style.borderRadius = messageInput.scrollHeight > initialInputHeight ? "15px" : "32px";
 });
 
-// Handle Enter key press for sending messages
+
 messageInput.addEventListener("keydown", (e) => {
   const userMessage = e.target.value.trim();
   if (e.key === "Enter" && !e.shiftKey && userMessage && window.innerWidth > 768) {
@@ -130,7 +147,7 @@ messageInput.addEventListener("keydown", (e) => {
   }
 });
 
-// Handle file input change and preview the selected file
+
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
   if (!file) return;
@@ -142,7 +159,6 @@ fileInput.addEventListener("change", () => {
     fileUploadWrapper.classList.add("file-uploaded");
     const base64String = e.target.result.split(",")[1];
 
-    // Store file data in userData
     userData.file = {
       data: base64String,
       mime_type: file.type,
@@ -152,13 +168,11 @@ fileInput.addEventListener("change", () => {
   reader.readAsDataURL(file);
 });
 
-// Cancel file upload
 fileCancelButton.addEventListener("click", () => {
   userData.file = {};
   fileUploadWrapper.classList.remove("file-uploaded");
 });
 
-// Initialize emoji picker and handle emoji selection
 const picker = new EmojiMart.Picker({
   theme: "light",
   skinTonePosition: "none",
@@ -183,4 +197,5 @@ sendMessage.addEventListener("click", (e) => handleOutgoingMessage(e));
 document.querySelector("#file-upload").addEventListener("click", () => fileInput.click());
 closeChatbot.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
 chatbotToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
+
 
