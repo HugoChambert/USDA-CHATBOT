@@ -392,7 +392,7 @@ function App() {
                   <Globe size={20} className="md:w-[18px] md:h-[18px]" />
                 </button>
                 {showLanguageMenu && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl overflow-hidden z-50">
                     {(Object.keys(translations) as Language[]).map((lang) => (
                       <button
                         key={lang}
