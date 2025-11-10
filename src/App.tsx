@@ -352,7 +352,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-100 flex items-center justify-center md:p-4">
       {!isOpen && (
         <button
           onClick={handleOpen}
@@ -365,7 +365,7 @@ function App() {
       {isOpen && (
         <div
           ref={chatContainerRef}
-          className={`w-full max-w-sm mx-auto sm:absolute ${isClosing ? 'animate-slide-down' : 'animate-slide-up'}`}
+          className={`w-full md:max-w-md mx-auto md:absolute ${isClosing ? 'animate-slide-down' : 'animate-slide-up'}`}
           style={{
             left: position.x || undefined,
             top: position.y || undefined,
@@ -373,23 +373,23 @@ function App() {
             cursor: isDragging ? 'grabbing' : 'auto',
           }}
         >
-          <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col h-screen sm:h-[500px]">
+          <div className="bg-white md:rounded-lg shadow-2xl overflow-hidden flex flex-col h-screen md:h-[600px]">
           {/* Header */}
           <div
-            className="bg-gradient-to-r from-slate-800 to-slate-700 px-3 py-2.5 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
+            className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-3 md:py-2.5 flex items-center justify-between md:cursor-grab md:active:cursor-grabbing select-none"
             onMouseDown={handleMouseDown}
           >
             <div className="flex items-center gap-2">
-              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-5 sm:h-6" />
+              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-6 md:h-6" />
             </div>
             <div className="flex items-center gap-2">
               <div className="relative" ref={languageMenuRef}>
                 <button
                   onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                  className="text-white hover:text-gray-300 transition-colors p-1 rounded hover:bg-slate-600"
+                  className="text-white hover:text-gray-300 transition-colors p-2 md:p-1 rounded hover:bg-slate-600"
                   title="Change Language"
                 >
-                  <Globe size={18} />
+                  <Globe size={20} className="md:w-[18px] md:h-[18px]" />
                 </button>
                 {showLanguageMenu && (
                   <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl py-2 z-50">
@@ -412,15 +412,15 @@ function App() {
               </div>
               <button
                 onClick={handleClose}
-                className="text-white hover:text-gray-300 transition-colors"
+                className="text-white hover:text-gray-300 transition-colors p-2 md:p-0"
               >
-                <X size={18} />
+                <X size={20} className="md:w-[18px] md:h-[18px]" />
               </button>
             </div>
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-4 md:p-3 space-y-4 md:space-y-3 bg-gray-50">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -428,19 +428,19 @@ function App() {
               >
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0">
-                    <div className="w-6 h-6 bg-slate-800 rounded-full flex items-center justify-center">
-                      <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-4 h-4" />
+                    <div className="w-8 h-8 md:w-6 md:h-6 bg-slate-800 rounded-full flex items-center justify-center">
+                      <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5 md:w-4 md:h-4" />
                     </div>
                   </div>
                 )}
                 <div
-                  className={`max-w-[80%] sm:max-w-xs px-3 py-2 rounded-lg ${
+                  className={`max-w-[85%] md:max-w-sm px-4 py-2.5 md:px-3 md:py-2 rounded-lg ${
                     message.role === 'user'
                       ? 'bg-green-700 text-white rounded-br-none'
                       : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-200'
                   }`}
                 >
-                  <p className="text-xs whitespace-pre-wrap leading-relaxed">
+                  <p className="text-sm md:text-xs whitespace-pre-wrap leading-relaxed">
                     {message.content}
                   </p>
                   {message.fileUrl && message.fileName && (
@@ -460,8 +460,8 @@ function App() {
             {loading && (
               <div className="flex gap-2 justify-start">
                 <div className="flex-shrink-0">
-                  <div className="w-6 h-6 bg-slate-800 rounded-full flex items-center justify-center">
-                    <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-4 h-4" />
+                  <div className="w-8 h-8 md:w-6 md:h-6 bg-slate-800 rounded-full flex items-center justify-center">
+                    <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5 md:w-4 md:h-4" />
                   </div>
                 </div>
                 <div className="bg-white px-3 py-2 rounded-lg rounded-bl-none shadow-sm border border-gray-200">
@@ -477,7 +477,7 @@ function App() {
           </div>
 
           {/* Input Area */}
-          <div className="p-3 bg-white border-t border-gray-200">
+          <div className="p-4 md:p-3 bg-white border-t border-gray-200">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -502,7 +502,7 @@ function App() {
                 {uploadingFile ? (
                   <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <Upload size={18} />
+                  <Upload size={20} className="md:w-[18px] md:h-[18px]" />
                 )}
               </button>
               <div className="flex-1 relative">
@@ -512,14 +512,14 @@ function App() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={translations[language].placeholder}
                   disabled={loading}
-                  className="w-full px-3 py-2 pr-16 rounded-full border border-gray-300 focus:outline-none focus:border-blue-500 disabled:bg-gray-100 text-xs"
+                  className="w-full px-4 py-3 md:px-3 md:py-2 pr-14 rounded-full border border-gray-300 focus:outline-none focus:border-blue-500 disabled:bg-gray-100 text-base md:text-xs"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   <button
                     type="button"
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    <Smile size={18} />
+                    <Smile size={20} className="md:w-[18px] md:h-[18px]" />
                   </button>
                 </div>
               </div>
