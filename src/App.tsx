@@ -220,6 +220,10 @@ function App() {
       const programs = await searchPrograms(keywords);
       const responseContent = generateConversationalResponse(userMessage, keywords, programs);
 
+      // Simulate human-like typing delay
+      const thinkingDelay = 800 + Math.random() * 700; // 800-1500ms
+      await new Promise(resolve => setTimeout(resolve, thinkingDelay));
+
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -273,6 +277,12 @@ function App() {
 
       setMessages((prev) => [...prev, fileMsg]);
 
+      setLoading(true);
+
+      // Simulate human-like thinking delay
+      const thinkingDelay = 800 + Math.random() * 700; // 800-1500ms
+      await new Promise(resolve => setTimeout(resolve, thinkingDelay));
+
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -287,6 +297,7 @@ function App() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
+      setLoading(false);
     } catch (error) {
       console.error('Upload error:', error);
       const errorMsg: Message = {
@@ -447,11 +458,11 @@ function App() {
                     <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="bg-white px-4 py-3 rounded-lg rounded-bl-none shadow-sm border border-gray-200">
+                  <div className="flex gap-1.5 items-end">
+                    <div className="w-2.5 h-2.5 bg-slate-700 rounded-full thinking-dot"></div>
+                    <div className="w-2.5 h-2.5 bg-slate-700 rounded-full thinking-dot"></div>
+                    <div className="w-2.5 h-2.5 bg-slate-700 rounded-full thinking-dot"></div>
                   </div>
                 </div>
               </div>
