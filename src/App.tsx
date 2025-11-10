@@ -434,11 +434,15 @@ function App() {
                   </div>
                 )}
                 <div
-                  className={`max-w-[85%] md:max-w-sm px-4 py-2.5 md:px-3 md:py-2 rounded-lg ${
+                  className={`max-w-[85%] md:max-w-sm px-4 py-2.5 md:px-3 md:py-2 rounded-2xl relative ${
                     message.role === 'user'
-                      ? 'bg-green-700 text-white rounded-br-none'
-                      : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-200'
+                      ? 'bg-green-700 text-white'
+                      : 'bg-white text-gray-800 shadow-sm border border-gray-200'
                   }`}
+                  style={{
+                    borderBottomRightRadius: message.role === 'user' ? '4px' : undefined,
+                    borderBottomLeftRadius: message.role === 'assistant' ? '4px' : undefined,
+                  }}
                 >
                   <p className="text-sm md:text-xs whitespace-pre-wrap leading-relaxed">
                     {message.content}
@@ -464,7 +468,7 @@ function App() {
                     <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5 md:w-4 md:h-4" />
                   </div>
                 </div>
-                <div className="bg-white px-3 py-2 rounded-lg rounded-bl-none shadow-sm border border-gray-200">
+                <div className="bg-white px-3 py-2 rounded-2xl shadow-sm border border-gray-200 relative" style={{ borderBottomLeftRadius: '4px' }}>
                   <div className="flex gap-1 items-end">
                     <div className="w-1.5 h-1.5 bg-slate-700 rounded-full thinking-dot"></div>
                     <div className="w-1.5 h-1.5 bg-slate-700 rounded-full thinking-dot"></div>
