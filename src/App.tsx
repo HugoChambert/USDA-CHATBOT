@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Smile, Paperclip, X, ChevronDown } from 'lucide-react';
+import { Send, Smile, Paperclip, X, ChevronDown, Globe, Upload } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { translations, Language } from './translations';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -12,6 +13,8 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  fileUrl?: string;
+  fileName?: string;
 }
 
 interface Program {
@@ -35,17 +38,15 @@ const USDA_KEYWORDS = [
 
 function App() {
   const [isOpen, setIsOpen] = useState(true);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! 👋\nI am your personal AI assistant.\nAsk me any questions regarding the USDA.',
-      timestamp: new Date(),
-    },
-  ]);
+  const [language, setLanguage] = useState<Language>('en');
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const languageMenuRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -54,6 +55,26 @@ function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const initialMsg: Message = {
+      id: '1',
+      role: 'assistant',
+      content: translations[language].greeting,
+      timestamp: new Date(),
+    };
+    setMessages([initialMsg]);
+  }, [language]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target as Node)) {
+        setShowLanguageMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const extractKeywords = (text: string): string[] => {
     const keywords: string[] = [];
@@ -100,13 +121,15 @@ function App() {
     keywords: string[],
     programs: Program[]
   ): string => {
+    const t = translations[language];
+
     if (!isOnTopic(query)) {
-      return "I'm specifically designed to help with USDA Rural Development programs. I can answer questions about housing, business development, broadband, energy, water systems, and community facilities in rural areas. What would you like to know about these topics?";
+      return t.offTopic;
     }
 
     if (programs.length === 0) {
       const mainKeyword = keywords[0] || 'that topic';
-      return `I understand you're asking about ${mainKeyword}, but I couldn't find specific matching programs in my database. Here's what I can help you with:\n\n• Housing: Direct loans, loan guarantees, repair grants\n• Business: Loan guarantees, development grants, cooperatives\n• Broadband: ReConnect, Community Connect programs\n• Energy: Rural Energy for America Program (REAP)\n• Water: Water and waste disposal loans and grants\n• Community: Facilities loans and grants\n\nCould you rephrase your question or ask about one of these areas?`;
+      return t.noResults.replace('{keyword}', mainKeyword);
     }
 
     const categoryGroups = programs.reduce((acc, program) => {
@@ -115,7 +138,12 @@ function App() {
       return acc;
     }, {} as Record<string, Program[]>);
 
-    let response = `Great question! I found ${programs.length} relevant program${programs.length > 1 ? 's' : ''} that might help:\n\n`;
+    const plural = programs.length > 1 ? 's' : '';
+    const pluralVerb = language === 'es' && programs.length > 1 ? 'n' : '';
+    let response = t.foundPrograms
+      .replace('{count}', programs.length.toString())
+      .replace('{plural}', plural)
+      .replace('{pluralVerb}', pluralVerb) + '\n\n';
 
     Object.entries(categoryGroups).forEach(([category, categoryPrograms]) => {
       response += `${category}\n`;
@@ -132,7 +160,7 @@ function App() {
       response += '\n';
     });
 
-    response += 'Would you like more details about any of these programs?';
+    response += t.moreDetails;
     return response;
   };
 
@@ -170,12 +198,74 @@ function App() {
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'I apologize, but I encountered an error processing your question. Please try asking again.',
+        content: translations[language].errorMessage,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingFile(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `uploads/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-files')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-files')
+        .getPublicUrl(filePath);
+
+      const fileMsg: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: `Uploaded file: ${file.name}`,
+        timestamp: new Date(),
+        fileUrl: publicUrl,
+        fileName: file.name,
+      };
+
+      setMessages((prev) => [...prev, fileMsg]);
+
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: language === 'en'
+          ? `I've received your file "${file.name}". How can I help you with this document?`
+          : language === 'es'
+          ? `He recibido tu archivo "${file.name}". ¿Cómo puedo ayudarte con este documento?`
+          : language === 'zh'
+          ? `我已收到您的文件"${file.name}"。我如何帮助您处理此文档？`
+          : `Tôi đã nhận được tệp của bạn "${file.name}". Tôi có thể giúp gì về tài liệu này?`,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, assistantMsg]);
+    } catch (error) {
+      console.error('Upload error:', error);
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: translations[language].errorMessage,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -207,12 +297,41 @@ function App() {
               </div>
               <span className="text-white text-xs font-medium">U.S. DEPARTMENT OF AGRICULTURE</span>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:text-gray-300 transition-colors"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="relative" ref={languageMenuRef}>
+                <button
+                  onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                  className="text-white hover:text-gray-300 transition-colors p-1 rounded hover:bg-slate-600"
+                  title="Change Language"
+                >
+                  <Globe size={20} />
+                </button>
+                {showLanguageMenu && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl py-2 z-50">
+                    {(Object.keys(translations) as Language[]).map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => {
+                          setLanguage(lang);
+                          setShowLanguageMenu(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors ${
+                          language === lang ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        {translations[lang].languages[lang]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-white hover:text-gray-300 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Messages Area */}
@@ -245,6 +364,17 @@ function App() {
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">
                     {message.content}
                   </p>
+                  {message.fileUrl && message.fileName && (
+                    <a
+                      href={message.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1 text-xs underline hover:no-underline"
+                    >
+                      <Paperclip size={12} />
+                      {message.fileName}
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
@@ -282,12 +412,32 @@ function App() {
               }}
               className="flex items-center gap-2"
             >
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileUpload}
+                className="hidden"
+                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading || uploadingFile}
+                className="text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors p-2 rounded-full hover:bg-blue-50"
+                title={translations[language].uploadFile}
+              >
+                {uploadingFile ? (
+                  <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Upload size={20} />
+                )}
+              </button>
               <div className="flex-1 relative">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Message..."
+                  placeholder={translations[language].placeholder}
                   disabled={loading}
                   className="w-full px-4 py-3 pr-20 rounded-full border border-gray-300 focus:outline-none focus:border-blue-500 disabled:bg-gray-100 text-sm"
                 />
@@ -297,12 +447,6 @@ function App() {
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <Smile size={20} />
-                  </button>
-                  <button
-                    type="button"
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    <Paperclip size={20} />
                   </button>
                 </div>
               </div>
