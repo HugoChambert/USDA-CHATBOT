@@ -11,9 +11,9 @@ const closeChatbot = document.querySelector("#close-chatbot");
 const GEMINI_API_KEY = "AIzaSyDrejWfjgE4D0--u6JnVXOIvze2PQxS51E";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-// PowerDrill AI API setup - Add your PowerDrill API details here
-const POWERDRILL_API_KEY = "proj_sk_n-YWstY21oc2Fvc2R4aDQ5OTA3cW96cmZ3NHZjYzoxNzYyNzI3OTE1NDUwOjA6MDoyOC9xZGF5UnI1cEVHL1RZOFFCNlVGZFRVTGJnWWZHVDVyZDdFZE5ZVklJ"; // Add your PowerDrill API key here
-const POWERDRILL_API_URL = "https://ai.data.cloud/api/v2/team/datasets/{dset-cmhqy4pv6acsw07qojkpdla3a}/query"; // Add your PowerDrill API URL here, e.g., "https://api.powerdrill.ai/generate"
+// // PowerDrill AI API setup - Add your PowerDrill API details here
+// const POWERDRILL_API_KEY = "proj_sk_n-YWstY21oc2Fvc2R4aDQ5OTA3cW96cmZ3NHZjYzoxNzYyNzI3OTE1NDUwOjA6MDoyOC9xZGF5UnI1cEVHL1RZOFFCNlVGZFRVTGJnWWZHVDVyZDdFZE5ZVklJ"; // Add your PowerDrill API key here
+// const POWERDRILL_API_URL = "https://ai.data.cloud/api/v2/team/datasets/{dset-cmhqy4pv6acsw07qojkpdla3a}/query"; // Add your PowerDrill API URL here, e.g., "https://api.powerdrill.ai/generate"
 
 
 const userData = {
@@ -197,6 +197,7 @@ sendMessage.addEventListener("click", (e) => handleOutgoingMessage(e));
 document.querySelector("#file-upload").addEventListener("click", () => fileInput.click());
 closeChatbot.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
 chatbotToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
+
 
 
 
