@@ -335,11 +335,11 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#005EA2] via-[#0076D6] to-[#58B4E5] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-100 flex items-center justify-center p-4">
       {!isOpen && (
         <button
           onClick={handleOpen}
-          className="fixed bottom-4 right-4 w-16 h-16 bg-[#005EA2] rounded-full flex items-center justify-center shadow-lg hover:bg-[#004b82] transition-colors animate-slide-up"
+          className="fixed bottom-4 right-4 w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors animate-slide-up"
           title="Open chat"
         >
           <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Chat" className="w-8 h-8" />
@@ -411,7 +411,7 @@ function App() {
               >
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0">
-                    <div className="w-7 h-7 bg-[#005EA2] rounded-full flex items-center justify-center">
+                    <div className="w-7 h-7 bg-slate-800 rounded-full flex items-center justify-center">
                       <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5" />
                     </div>
                   </div>
@@ -443,7 +443,7 @@ function App() {
             {loading && (
               <div className="flex gap-3 justify-start">
                 <div className="flex-shrink-0">
-                  <div className="w-7 h-7 bg-[#005EA2] rounded-full flex items-center justify-center">
+                  <div className="w-7 h-7 bg-slate-800 rounded-full flex items-center justify-center">
                     <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5" />
                   </div>
                 </div>
