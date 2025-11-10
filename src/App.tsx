@@ -38,6 +38,7 @@ const USDA_KEYWORDS = [
 
 function App() {
   const [isOpen, setIsOpen] = useState(true);
+  const [isClosing, setIsClosing] = useState(false);
   const [language, setLanguage] = useState<Language>('en');
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -269,33 +270,36 @@ function App() {
     }
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 300);
+  };
+
+  const handleOpen = () => {
+    setIsOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-100 flex items-center justify-center p-4">
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors"
+          onClick={handleOpen}
+          className="fixed bottom-4 right-4 w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors animate-slide-up"
+          title="Open chat"
         >
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
+          <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Chat" className="w-8 h-8" />
         </button>
       )}
       {isOpen && (
-        <div className="w-full max-w-md relative">
+        <div className={`w-full max-w-md relative ${isClosing ? 'animate-slide-down' : 'animate-slide-up'}`}>
           <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col" style={{ height: '600px' }}>
           {/* Header */}
           <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-white px-3 py-1 rounded">
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col">
-                    <span className="text-slate-800 font-bold text-sm leading-tight">USDA</span>
-                    <div className="h-0.5 bg-blue-600"></div>
-                  </div>
-                </div>
-              </div>
-              <span className="text-white text-xs font-medium">U.S. DEPARTMENT OF AGRICULTURE</span>
+            <div className="flex items-center gap-2">
+              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-8" />
             </div>
             <div className="flex items-center gap-2">
               <div className="relative" ref={languageMenuRef}>
@@ -326,7 +330,7 @@ function App() {
                 )}
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="text-white hover:text-gray-300 transition-colors"
               >
                 <X size={20} />
@@ -343,15 +347,7 @@ function App() {
               >
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-                      </svg>
-                    </div>
+                    <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-6 h-6" />
                   </div>
                 )}
                 <div
@@ -381,15 +377,7 @@ function App() {
             {loading && (
               <div className="flex gap-3 justify-start">
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-white"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-                    </svg>
-                  </div>
+                  <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-6 h-6" />
                 </div>
                 <div className="bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200">
                   <div className="flex gap-1">
