@@ -39,6 +39,10 @@ const USDA_KEYWORDS = [
 ];
 
 function App() {
+  console.log('App component loaded');
+  console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+  console.log('Supabase client:', supabase ? 'initialized' : 'null');
+
   const [isOpen, setIsOpen] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
   const [language, setLanguage] = useState<Language>('en');
