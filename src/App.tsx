@@ -41,20 +41,13 @@ function App() {
   const [isClosing, setIsClosing] = useState(false);
   const [language, setLanguage] = useState<Language>('en');
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const languageMenuRef = useRef<HTMLDivElement>(null);
-  const chatRef = useRef<HTMLDivElement>(null);
-
-  const emojis = ['😊', '😂', '❤️', '👍', '🎉', '🙏', '👏', '🔥', '✨', '💯', '🤔', '😍', '🌟', '💪', '🙌', '👌'];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -83,45 +76,6 @@ function App() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest('.chat-header')) {
-      setIsDragging(true);
-      setDragStart({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y
-      });
-    }
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, dragStart]);
-
-  const addEmoji = (emoji: string) => {
-    setInput(input + emoji);
-    setShowEmojiPicker(false);
-  };
 
   const extractKeywords = (text: string): string[] => {
     const keywords: string[] = [];
@@ -329,40 +283,23 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <iframe
-        src="https://www.rd.usda.gov/"
-        className="absolute inset-0 w-full h-full border-0"
-        title="USDA Rural Development"
-      />
+    <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-100 flex items-center justify-center p-4">
       {!isOpen && (
         <button
           onClick={handleOpen}
-          className="fixed bottom-4 right-4 w-14 h-14 sm:w-16 sm:h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors animate-slide-up z-50"
+          className="fixed bottom-4 right-4 w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors animate-slide-up"
           title="Open chat"
         >
-          <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Chat" className="w-7 h-7 sm:w-8 sm:h-8" />
+          <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Chat" className="w-8 h-8" />
         </button>
       )}
       {isOpen && (
-        <div
-          ref={chatRef}
-          className={`w-[95vw] sm:w-[90vw] md:w-full max-w-md fixed ${isClosing ? 'animate-slide-down' : 'animate-slide-up'} z-50`}
-          style={{
-            transform: `translate(${position.x}px, ${position.y}px)`,
-            cursor: isDragging ? 'grabbing' : 'default',
-            left: '50%',
-            top: '50%',
-            marginLeft: 'min(-47.5vw, -14rem)',
-            marginTop: 'min(-47.5vw, -18.75rem)'
-          }}
-          onMouseDown={handleMouseDown}
-        >
-          <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col h-[85vh] sm:h-[80vh] md:h-[600px]">
+        <div className={`w-full max-w-md relative ${isClosing ? 'animate-slide-down' : 'animate-slide-up'}`}>
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col" style={{ height: '600px' }}>
           {/* Header */}
-          <div className="chat-header bg-gradient-to-r from-slate-800 to-slate-700 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between cursor-grab active:cursor-grabbing">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-6 sm:h-8 max-w-full" />
+          <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-8" />
             </div>
             <div className="flex items-center gap-2">
               <div className="relative" ref={languageMenuRef}>
@@ -371,7 +308,7 @@ function App() {
                   className="text-white hover:text-gray-300 transition-colors p-1 rounded hover:bg-slate-600"
                   title="Change Language"
                 >
-                  <Globe size={18} className="sm:w-5 sm:h-5" />
+                  <Globe size={20} />
                 </button>
                 {showLanguageMenu && (
                   <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl py-2 z-50">
@@ -396,7 +333,7 @@ function App() {
                 onClick={handleClose}
                 className="text-white hover:text-gray-300 transition-colors"
               >
-                <X size={18} className="sm:w-5 sm:h-5" />
+                <X size={20} />
               </button>
             </div>
           </div>
@@ -416,7 +353,7 @@ function App() {
                   </div>
                 )}
                 <div
-                  className={`max-w-[75%] sm:max-w-xs px-3 sm:px-4 py-2 rounded-lg ${
+                  className={`max-w-xs px-4 py-2 rounded-lg ${
                     message.role === 'user'
                       ? 'bg-green-700 text-white rounded-br-none'
                       : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-200'
@@ -459,7 +396,7 @@ function App() {
           </div>
 
           {/* Input Area */}
-          <div className="p-3 sm:p-4 bg-white border-t border-gray-200">
+          <div className="p-4 bg-white border-t border-gray-200">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -478,13 +415,13 @@ function App() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading || uploadingFile}
-                className="text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors p-1.5 sm:p-2 rounded-full hover:bg-blue-50"
+                className="text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors p-2 rounded-full hover:bg-blue-50"
                 title={translations[language].uploadFile}
               >
                 {uploadingFile ? (
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <Upload size={18} className="sm:w-5 sm:h-5" />
+                  <Upload size={20} />
                 )}
               </button>
               <div className="flex-1 relative">
@@ -494,32 +431,15 @@ function App() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={translations[language].placeholder}
                   disabled={loading}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-12 sm:pr-20 rounded-full border border-gray-300 focus:outline-none focus:border-blue-500 disabled:bg-gray-100 text-sm"
+                  className="w-full px-4 py-3 pr-20 rounded-full border border-gray-300 focus:outline-none focus:border-blue-500 disabled:bg-gray-100 text-sm"
                 />
-                <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2">
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <Smile size={18} className="sm:w-5 sm:h-5" />
-                    </button>
-                    {showEmojiPicker && (
-                      <div className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-xl p-2 grid grid-cols-4 gap-1 z-50 max-w-[200px] sm:max-w-none">
-                        {emojis.map((emoji, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => addEmoji(emoji)}
-                            className="text-xl sm:text-2xl hover:bg-gray-100 rounded p-1 transition-colors"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <Smile size={20} />
+                  </button>
                 </div>
               </div>
             </form>
