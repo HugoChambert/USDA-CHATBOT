@@ -3,10 +3,12 @@ import { Send, Smile, Paperclip, X, ChevronDown, Globe, Upload } from 'lucide-re
 import { createClient } from '@supabase/supabase-js';
 import { translations, Language } from './translations';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 interface Message {
   id: string;
@@ -127,7 +129,7 @@ function App() {
   };
 
   const searchPrograms = async (keywords: string[]): Promise<Program[]> => {
-    if (keywords.length === 0) return [];
+    if (keywords.length === 0 || !supabase) return [];
 
     try {
       const searchConditions = keywords.map(keyword =>
@@ -248,7 +250,7 @@ function App() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !supabase) return;
 
     setUploadingFile(true);
     try {
