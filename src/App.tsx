@@ -287,19 +287,31 @@ function App() {
       {!isOpen && (
         <button
           onClick={handleOpen}
-          className="fixed bottom-4 right-4 w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors animate-slide-up"
+          className="fixed bottom-4 right-4 w-16 h-16 bg-[#005EA2] rounded-full flex items-center justify-center shadow-lg hover:bg-[#004b82] transition-colors animate-slide-up"
           title="Open chat"
         >
           <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Chat" className="w-8 h-8" />
         </button>
       )}
       {isOpen && (
-        <div className={`w-full max-w-md relative ${isClosing ? 'animate-slide-down' : 'animate-slide-up'}`}>
-          <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col" style={{ height: '600px' }}>
+        <div
+          ref={chatContainerRef}
+          className={`w-full max-w-md mx-auto sm:absolute ${isClosing ? 'animate-slide-down' : 'animate-slide-up'}`}
+          style={{
+            left: position.x || undefined,
+            top: position.y || undefined,
+            transform: position.x ? 'none' : undefined,
+            cursor: isDragging ? 'grabbing' : 'auto',
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col h-screen sm:h-[600px]">
           {/* Header */}
-          <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-3 flex items-center justify-between">
+          <div
+            className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-3 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
+            onMouseDown={handleMouseDown}
+          >
             <div className="flex items-center gap-2">
-              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-8" />
+              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-6 sm:h-8" />
             </div>
             <div className="flex items-center gap-2">
               <div className="relative" ref={languageMenuRef}>
@@ -347,13 +359,13 @@ function App() {
               >
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0">
-                    <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center">
+                    <div className="w-7 h-7 bg-[#005EA2] rounded-full flex items-center justify-center">
                       <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5" />
                     </div>
                   </div>
                 )}
                 <div
-                  className={`max-w-xs px-4 py-2 rounded-lg ${
+                  className={`max-w-[80%] sm:max-w-xs px-4 py-2 rounded-lg ${
                     message.role === 'user'
                       ? 'bg-green-700 text-white rounded-br-none'
                       : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-200'
@@ -379,7 +391,7 @@ function App() {
             {loading && (
               <div className="flex gap-3 justify-start">
                 <div className="flex-shrink-0">
-                  <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center">
+                  <div className="w-7 h-7 bg-[#005EA2] rounded-full flex items-center justify-center">
                     <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5" />
                   </div>
                 </div>

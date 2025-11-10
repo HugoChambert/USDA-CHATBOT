@@ -19,7 +19,7 @@ export interface Translations {
 
 export const translations: Record<Language, Translations> = {
   en: {
-    greeting: 'Hello!\nI am your personal AI assistant.\nAsk me any questions regarding the USDA.',
+    greeting: 'Hello! 👋\nI am your personal AI assistant.\nAsk me any questions regarding the USDA.',
     placeholder: 'Message...',
     uploadFile: 'Upload File',
     offTopic: "I'm specifically designed to help with USDA Rural Development programs. I can answer questions about housing, business development, broadband, energy, water systems, and community facilities in rural areas. What would you like to know about these topics?",
@@ -35,7 +35,7 @@ export const translations: Record<Language, Translations> = {
     }
   },
   es: {
-    greeting: 'Hola!\nSoy tu asistente personal de IA.\nHazme cualquier pregunta sobre el USDA.',
+    greeting: 'Hola! 👋\nSoy tu asistente personal de IA.\nHazme cualquier pregunta sobre el USDA.',
     placeholder: 'Mensaje...',
     uploadFile: 'Subir Archivo',
     offTopic: 'Estoy específicamente diseñado para ayudar con los programas de Desarrollo Rural del USDA. Puedo responder preguntas sobre vivienda, desarrollo empresarial, banda ancha, energía, sistemas de agua e instalaciones comunitarias en áreas rurales. ¿Qué te gustaría saber sobre estos temas?',
@@ -51,7 +51,7 @@ export const translations: Record<Language, Translations> = {
     }
   },
   zh: {
-    greeting: '你好！\n我是你的个人AI助手。\n请问我关于美国农业部的任何问题。',
+    greeting: '你好！👋\n我是你的个人AI助手。\n请问我关于美国农业部的任何问题。',
     placeholder: '消息...',
     uploadFile: '上传文件',
     offTopic: '我专门帮助处理美国农业部农村发展项目。我可以回答有关农村地区的住房、商业发展、宽带、能源、供水系统和社区设施的问题。您想了解这些主题的什么内容？',
@@ -67,7 +67,7 @@ export const translations: Record<Language, Translations> = {
     }
   },
   vi: {
-    greeting: 'Xin chào!\nTôi là trợ lý AI cá nhân của bạn.\nHãy hỏi tôi bất kỳ câu hỏi nào về USDA.',
+    greeting: 'Xin chào! 👋\nTôi là trợ lý AI cá nhân của bạn.\nHãy hỏi tôi bất kỳ câu hỏi nào về USDA.',
     placeholder: 'Tin nhắn...',
     uploadFile: 'Tải Lên Tệp',
     offTopic: 'Tôi được thiết kế đặc biệt để hỗ trợ các chương trình Phát triển Nông thôn USDA. Tôi có thể trả lời các câu hỏi về nhà ở, phát triển kinh doanh, băng thông rộng, năng lượng, hệ thống nước và cơ sở vật chất cộng đồng ở các khu vực nông thôn. Bạn muốn biết gì về các chủ đề này?',
