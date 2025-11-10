@@ -458,11 +458,11 @@ function App() {
                     <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="bg-white px-4 py-3 rounded-lg rounded-bl-none shadow-sm border border-gray-200">
-                  <div className="flex gap-1.5 items-end">
-                    <div className="w-2.5 h-2.5 bg-slate-700 rounded-full thinking-dot"></div>
-                    <div className="w-2.5 h-2.5 bg-slate-700 rounded-full thinking-dot"></div>
-                    <div className="w-2.5 h-2.5 bg-slate-700 rounded-full thinking-dot"></div>
+                <div className="bg-white px-3 py-2 rounded-lg rounded-bl-none shadow-sm border border-gray-200">
+                  <div className="flex gap-1 items-end">
+                    <div className="w-1.5 h-1.5 bg-slate-700 rounded-full thinking-dot"></div>
+                    <div className="w-1.5 h-1.5 bg-slate-700 rounded-full thinking-dot"></div>
+                    <div className="w-1.5 h-1.5 bg-slate-700 rounded-full thinking-dot"></div>
                   </div>
                 </div>
               </div>
