@@ -17,6 +17,14 @@ interface Message {
   timestamp: Date;
   fileUrl?: string;
   fileName?: string;
+  options?: MessageOption[];
+}
+
+interface MessageOption {
+  id: string;
+  label: string;
+  type: 'program' | 'document' | 'faq';
+  data: Program | Document | FAQ;
 }
 
 interface Program {
@@ -233,88 +241,79 @@ function App() {
     programs: Program[],
     documents: Document[],
     faqs: FAQ[]
-  ): string => {
+  ): { content: string; options?: MessageOption[] } => {
     const t = translations[language];
 
     if (!isOnTopic(query)) {
-      return t.offTopic;
+      return { content: t.offTopic };
     }
 
     if (programs.length === 0 && documents.length === 0 && faqs.length === 0) {
       const mainKeyword = keywords[0] || 'that topic';
-      return t.noResults.replace('{keyword}', mainKeyword);
+      return { content: t.noResults.replace('{keyword}', mainKeyword) };
     }
 
+    const options: MessageOption[] = [];
     let response = '';
 
-    if (faqs.length > 0) {
-      response += language === 'en' ? '📋 Frequently Asked Questions:\n\n' :
-                  language === 'es' ? '📋 Preguntas Frecuentes:\n\n' :
-                  language === 'zh' ? '📋 常见问题：\n\n' :
-                  '📋 Câu Hỏi Thường Gặp:\n\n';
-
-      faqs.forEach((faq) => {
-        response += `❓ ${faq.question}\n`;
-        const answer = faq.answer.substring(0, 200);
-        response += `${answer}${faq.answer.length > 200 ? '...' : ''}\n\n`;
-      });
+    // If only 1 FAQ matches, show full answer
+    if (faqs.length === 1) {
+      response = faqs[0].answer;
+      if (programs.length > 0 || documents.length > 0) {
+        response += '\n\n' + (language === 'en' ? 'Related resources available below.' :
+                               language === 'es' ? 'Recursos relacionados disponibles a continuación.' :
+                               language === 'zh' ? '相关资源如下。' :
+                               'Tài nguyên liên quan bên dưới.');
+      }
+    } else if (faqs.length > 1) {
+      response = language === 'en' ? 'I found several answers to your question. Please select one:' :
+                 language === 'es' ? 'Encontré varias respuestas a tu pregunta. Por favor selecciona una:' :
+                 language === 'zh' ? '我找到了几个答案。请选择一个：' :
+                 'Tôi tìm thấy một số câu trả lời. Vui lòng chọn một:';
     }
 
+    // Add FAQs as options
+    faqs.forEach((faq) => {
+      options.push({
+        id: faq.id,
+        label: faq.question,
+        type: 'faq',
+        data: faq
+      });
+    });
+
+    // If we have programs, add them as options
     if (programs.length > 0) {
-      const plural = programs.length > 1 ? 's' : '';
-      const pluralVerb = language === 'es' && programs.length > 1 ? 'n' : '';
-      response += t.foundPrograms
-        .replace('{count}', programs.length.toString())
-        .replace('{plural}', plural)
-        .replace('{pluralVerb}', pluralVerb) + '\n\n';
+      if (!response) {
+        response = language === 'en' ? `I found ${programs.length} program${programs.length > 1 ? 's' : ''} that may help:` :
+                   language === 'es' ? `Encontré ${programs.length} programa${programs.length > 1 ? 's' : ''} que puede${programs.length > 1 ? 'n' : ''} ayudar:` :
+                   language === 'zh' ? `我找到了 ${programs.length} 个项目可能有帮助：` :
+                   `Tôi tìm thấy ${programs.length} chương trình có thể giúp đỡ:`;
+      }
 
-      const categoryGroups = programs.reduce((acc, program) => {
-        if (!acc[program.category]) acc[program.category] = [];
-        acc[program.category].push(program);
-        return acc;
-      }, {} as Record<string, Program[]>);
-
-      Object.entries(categoryGroups).forEach(([category, categoryPrograms]) => {
-        response += `📁 ${category}\n`;
-        categoryPrograms.forEach((program) => {
-          response += `\n• ${program.title}\n`;
-          if (program.description) {
-            const desc = program.description.substring(0, 150);
-            response += `  ${desc}${program.description.length > 150 ? '...' : ''}\n`;
-          }
-          if (program.eligibility) {
-            response += `  Eligibility: ${program.eligibility.substring(0, 100)}...\n`;
-          }
-          if (program.url) {
-            response += `  🔗 ${program.url}\n`;
-          }
+      programs.forEach((program) => {
+        options.push({
+          id: program.id || program.title,
+          label: program.title,
+          type: 'program',
+          data: program
         });
-        response += '\n';
       });
     }
 
+    // Add documents as options if any
     if (documents.length > 0) {
-      response += language === 'en' ? '\n📄 Related Documents:\n\n' :
-                  language === 'es' ? '\n📄 Documentos Relacionados:\n\n' :
-                  language === 'zh' ? '\n📄 相关文件：\n\n' :
-                  '\n📄 Tài Liệu Liên Quan:\n\n';
-
       documents.forEach((doc) => {
-        response += `• ${doc.title}`;
-        if (doc.document_type) {
-          response += ` (${doc.document_type})`;
-        }
-        response += `\n`;
-        if (doc.description) {
-          const desc = doc.description.substring(0, 100);
-          response += `  ${desc}${doc.description.length > 100 ? '...' : ''}\n`;
-        }
-        response += `  🔗 ${doc.document_url}\n\n`;
+        options.push({
+          id: doc.id,
+          label: `${doc.title} (${doc.document_type})`,
+          type: 'document',
+          data: doc
+        });
       });
     }
 
-    response += t.moreDetails;
-    return response;
+    return { content: response, options: options.length > 0 ? options : undefined };
   };
 
   const handleSend = async () => {
@@ -340,7 +339,7 @@ function App() {
         searchDocuments(keywords),
         searchFAQs(keywords)
       ]);
-      const responseContent = generateConversationalResponse(userMessage, keywords, programs, documents, faqs);
+      const { content: responseContent, options } = generateConversationalResponse(userMessage, keywords, programs, documents, faqs);
 
       // Simulate human-like typing delay
       const thinkingDelay = 800 + Math.random() * 700; // 800-1500ms
@@ -351,6 +350,7 @@ function App() {
         role: 'assistant',
         content: responseContent,
         timestamp: new Date(),
+        options,
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
@@ -467,6 +467,53 @@ function App() {
     setShowEmojiPicker(false);
   };
 
+  const handleOptionClick = async (option: MessageOption) => {
+    setLoading(true);
+
+    // Simulate thinking delay
+    const thinkingDelay = 600 + Math.random() * 400;
+    await new Promise(resolve => setTimeout(resolve, thinkingDelay));
+
+    let responseContent = '';
+
+    if (option.type === 'faq') {
+      const faq = option.data as FAQ;
+      responseContent = faq.answer;
+    } else if (option.type === 'program') {
+      const program = option.data as Program;
+      responseContent = `${program.title}\n\n${program.description || ''}`;
+
+      if (program.eligibility) {
+        responseContent += `\n\nEligibility: ${program.eligibility}`;
+      }
+
+      if (program.benefits) {
+        responseContent += `\n\nBenefits: ${program.benefits}`;
+      }
+
+      if (program.application_process) {
+        responseContent += `\n\nHow to Apply: ${program.application_process}`;
+      }
+
+      if (program.url) {
+        responseContent += `\n\nLearn more: ${program.url}`;
+      }
+    } else if (option.type === 'document') {
+      const doc = option.data as Document;
+      responseContent = `${doc.title}\n\n${doc.description || ''}\n\nDownload: ${doc.document_url}`;
+    }
+
+    const assistantMsg: Message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: responseContent,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, assistantMsg]);
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-400 to-blue-100 flex items-center justify-center md:p-4">
       {!isOpen && (
@@ -577,6 +624,20 @@ function App() {
                 </div>
               </div>
             ))}
+            {messages.length > 0 && messages[messages.length - 1].options && (
+              <div className="flex flex-col gap-2 ml-10">
+                {messages[messages.length - 1].options!.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => handleOptionClick(option)}
+                    disabled={loading}
+                    className="bg-white border-2 border-slate-800 text-slate-800 px-4 py-2.5 rounded-2xl text-sm md:text-xs text-left hover:bg-slate-800 hover:text-white transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
             {loading && (
               <div className="flex gap-2 justify-start">
                 <div className="flex-shrink-0">
