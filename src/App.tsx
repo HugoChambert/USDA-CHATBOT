@@ -245,12 +245,22 @@ function App() {
     const t = translations[language];
 
     if (!isOnTopic(query)) {
-      return { content: t.offTopic };
+      return {
+        content: language === 'en' ? "Unfortunately, I can't help with that. However, I can assist with:\n• Housing loans and grants\n• Business financing\n• Rural broadband\n• Renewable energy\n• Water systems\n• Community facilities" :
+                 language === 'es' ? "Desafortunadamente, no puedo ayudar con eso. Sin embargo, puedo ayudar con:\n• Préstamos y subvenciones de vivienda\n• Financiamiento empresarial\n• Banda ancha rural\n• Energía renovable\n• Sistemas de agua\n• Instalaciones comunitarias" :
+                 language === 'zh' ? "很抱歉，我无法帮助解决这个问题。但是，我可以帮助：\n• 住房贷款和补助\n• 商业融资\n• 农村宽带\n• 可再生能源\n• 供水系统\n• 社区设施" :
+                 "Rất tiếc, tôi không thể giúp về điều đó. Tuy nhiên, tôi có thể hỗ trợ:\n• Các khoản vay và trợ cấp nhà ở\n• Tài chính doanh nghiệp\n• Băng thông rộng nông thôn\n• Năng lượng tái tạo\n• Hệ thống nước\n• Cơ sở vật chất cộng đồng"
+      };
     }
 
     if (programs.length === 0 && documents.length === 0 && faqs.length === 0) {
       const mainKeyword = keywords[0] || 'that topic';
-      return { content: t.noResults.replace('{keyword}', mainKeyword) };
+      return {
+        content: language === 'en' ? `Unfortunately, I can't find specific information about "${mainKeyword}". However, I can help with other USDA programs. What would you like to know about?` :
+                 language === 'es' ? `Desafortunadamente, no puedo encontrar información específica sobre "${mainKeyword}". Sin embargo, puedo ayudar con otros programas del USDA. ¿Sobre qué te gustaría saber?` :
+                 language === 'zh' ? `很抱歉，我找不到关于"${mainKeyword}"的具体信息。但是，我可以帮助您了解其他USDA项目。您想了解什么？` :
+                 `Rất tiếc, tôi không thể tìm thấy thông tin cụ thể về "${mainKeyword}". Tuy nhiên, tôi có thể giúp với các chương trình USDA khác. Bạn muốn biết gì?`
+      };
     }
 
     const options: MessageOption[] = [];
@@ -481,26 +491,38 @@ function App() {
       responseContent = faq.answer;
     } else if (option.type === 'program') {
       const program = option.data as Program;
-      responseContent = `${program.title}\n\n${program.description || ''}`;
+
+      // Concise summary
+      const desc = program.description || '';
+      const shortDesc = desc.length > 200 ? desc.substring(0, 200) + '...' : desc;
+      responseContent = `${program.title}\n\n${shortDesc}`;
 
       if (program.eligibility) {
-        responseContent += `\n\nEligibility: ${program.eligibility}`;
+        const shortElig = program.eligibility.length > 150 ? program.eligibility.substring(0, 150) + '...' : program.eligibility;
+        responseContent += `\n\nWho Can Apply: ${shortElig}`;
       }
 
       if (program.benefits) {
-        responseContent += `\n\nBenefits: ${program.benefits}`;
+        const shortBenefits = program.benefits.length > 150 ? program.benefits.substring(0, 150) + '...' : program.benefits;
+        responseContent += `\n\nKey Benefits: ${shortBenefits}`;
       }
 
       if (program.application_process) {
-        responseContent += `\n\nHow to Apply: ${program.application_process}`;
+        const shortProcess = program.application_process.length > 150 ? program.application_process.substring(0, 150) + '...' : program.application_process;
+        responseContent += `\n\nHow to Apply: ${shortProcess}`;
       }
 
       if (program.url) {
-        responseContent += `\n\nLearn more: ${program.url}`;
+        responseContent += `\n\nFull Details: ${program.url}`;
       }
     } else if (option.type === 'document') {
       const doc = option.data as Document;
-      responseContent = `${doc.title}\n\n${doc.description || ''}\n\nDownload: ${doc.document_url}`;
+      const shortDesc = doc.description && doc.description.length > 150 ? doc.description.substring(0, 150) + '...' : doc.description;
+      responseContent = `${doc.title}`;
+      if (shortDesc) {
+        responseContent += `\n\n${shortDesc}`;
+      }
+      responseContent += `\n\nDownload: ${doc.document_url}`;
     }
 
     const assistantMsg: Message = {
