@@ -20,10 +20,30 @@ interface Message {
 }
 
 interface Program {
+  id?: string;
   title: string;
   description: string | null;
   url: string | null;
   category: string;
+  eligibility?: string | null;
+  benefits?: string | null;
+  application_process?: string | null;
+}
+
+interface Document {
+  id: string;
+  title: string;
+  description: string | null;
+  document_url: string;
+  document_type: string;
+  category: string | null;
+}
+
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  category: string | null;
 }
 
 const USDA_KEYWORDS = [
@@ -137,12 +157,12 @@ function App() {
 
     try {
       const searchConditions = keywords.map(keyword =>
-        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%`
+        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%,eligibility.ilike.%${keyword}%,benefits.ilike.%${keyword}%`
       ).join(',');
 
       const { data, error } = await supabase
-        .from('usda_programs')
-        .select('title, description, url, category')
+        .from('programs')
+        .select('id, title, description, url, category, eligibility, benefits, application_process')
         .or(searchConditions)
         .limit(5);
 
@@ -157,10 +177,62 @@ function App() {
     }
   };
 
+  const searchDocuments = async (keywords: string[]): Promise<Document[]> => {
+    if (keywords.length === 0 || !supabase) return [];
+
+    try {
+      const searchConditions = keywords.map(keyword =>
+        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%,document_type.ilike.%${keyword}%`
+      ).join(',');
+
+      const { data, error } = await supabase
+        .from('documents')
+        .select('id, title, description, document_url, document_type, category')
+        .or(searchConditions)
+        .limit(3);
+
+      if (error) {
+        console.error('Document search error:', error);
+        return [];
+      }
+      return data || [];
+    } catch (error) {
+      console.error('Document search error:', error);
+      return [];
+    }
+  };
+
+  const searchFAQs = async (keywords: string[]): Promise<FAQ[]> => {
+    if (keywords.length === 0 || !supabase) return [];
+
+    try {
+      const searchConditions = keywords.map(keyword =>
+        `question.ilike.%${keyword}%,answer.ilike.%${keyword}%`
+      ).join(',');
+
+      const { data, error } = await supabase
+        .from('faqs')
+        .select('id, question, answer, category')
+        .or(searchConditions)
+        .limit(2);
+
+      if (error) {
+        console.error('FAQ search error:', error);
+        return [];
+      }
+      return data || [];
+    } catch (error) {
+      console.error('FAQ search error:', error);
+      return [];
+    }
+  };
+
   const generateConversationalResponse = (
     query: string,
     keywords: string[],
-    programs: Program[]
+    programs: Program[],
+    documents: Document[],
+    faqs: FAQ[]
   ): string => {
     const t = translations[language];
 
@@ -168,38 +240,78 @@ function App() {
       return t.offTopic;
     }
 
-    if (programs.length === 0) {
+    if (programs.length === 0 && documents.length === 0 && faqs.length === 0) {
       const mainKeyword = keywords[0] || 'that topic';
       return t.noResults.replace('{keyword}', mainKeyword);
     }
 
-    const categoryGroups = programs.reduce((acc, program) => {
-      if (!acc[program.category]) acc[program.category] = [];
-      acc[program.category].push(program);
-      return acc;
-    }, {} as Record<string, Program[]>);
+    let response = '';
 
-    const plural = programs.length > 1 ? 's' : '';
-    const pluralVerb = language === 'es' && programs.length > 1 ? 'n' : '';
-    let response = t.foundPrograms
-      .replace('{count}', programs.length.toString())
-      .replace('{plural}', plural)
-      .replace('{pluralVerb}', pluralVerb) + '\n\n';
+    if (faqs.length > 0) {
+      response += language === 'en' ? '📋 Frequently Asked Questions:\n\n' :
+                  language === 'es' ? '📋 Preguntas Frecuentes:\n\n' :
+                  language === 'zh' ? '📋 常见问题：\n\n' :
+                  '📋 Câu Hỏi Thường Gặp:\n\n';
 
-    Object.entries(categoryGroups).forEach(([category, categoryPrograms]) => {
-      response += `${category}\n`;
-      categoryPrograms.forEach((program) => {
-        response += `\n• ${program.title}\n`;
-        if (program.description) {
-          const desc = program.description.substring(0, 150);
-          response += `  ${desc}${program.description.length > 150 ? '...' : ''}\n`;
-        }
-        if (program.url) {
-          response += `  Link: ${program.url}\n`;
-        }
+      faqs.forEach((faq) => {
+        response += `❓ ${faq.question}\n`;
+        const answer = faq.answer.substring(0, 200);
+        response += `${answer}${faq.answer.length > 200 ? '...' : ''}\n\n`;
       });
-      response += '\n';
-    });
+    }
+
+    if (programs.length > 0) {
+      const plural = programs.length > 1 ? 's' : '';
+      const pluralVerb = language === 'es' && programs.length > 1 ? 'n' : '';
+      response += t.foundPrograms
+        .replace('{count}', programs.length.toString())
+        .replace('{plural}', plural)
+        .replace('{pluralVerb}', pluralVerb) + '\n\n';
+
+      const categoryGroups = programs.reduce((acc, program) => {
+        if (!acc[program.category]) acc[program.category] = [];
+        acc[program.category].push(program);
+        return acc;
+      }, {} as Record<string, Program[]>);
+
+      Object.entries(categoryGroups).forEach(([category, categoryPrograms]) => {
+        response += `📁 ${category}\n`;
+        categoryPrograms.forEach((program) => {
+          response += `\n• ${program.title}\n`;
+          if (program.description) {
+            const desc = program.description.substring(0, 150);
+            response += `  ${desc}${program.description.length > 150 ? '...' : ''}\n`;
+          }
+          if (program.eligibility) {
+            response += `  Eligibility: ${program.eligibility.substring(0, 100)}...\n`;
+          }
+          if (program.url) {
+            response += `  🔗 ${program.url}\n`;
+          }
+        });
+        response += '\n';
+      });
+    }
+
+    if (documents.length > 0) {
+      response += language === 'en' ? '\n📄 Related Documents:\n\n' :
+                  language === 'es' ? '\n📄 Documentos Relacionados:\n\n' :
+                  language === 'zh' ? '\n📄 相关文件：\n\n' :
+                  '\n📄 Tài Liệu Liên Quan:\n\n';
+
+      documents.forEach((doc) => {
+        response += `• ${doc.title}`;
+        if (doc.document_type) {
+          response += ` (${doc.document_type})`;
+        }
+        response += `\n`;
+        if (doc.description) {
+          const desc = doc.description.substring(0, 100);
+          response += `  ${desc}${doc.description.length > 100 ? '...' : ''}\n`;
+        }
+        response += `  🔗 ${doc.document_url}\n\n`;
+      });
+    }
 
     response += t.moreDetails;
     return response;
@@ -223,8 +335,12 @@ function App() {
 
     try {
       const keywords = extractKeywords(userMessage);
-      const programs = await searchPrograms(keywords);
-      const responseContent = generateConversationalResponse(userMessage, keywords, programs);
+      const [programs, documents, faqs] = await Promise.all([
+        searchPrograms(keywords),
+        searchDocuments(keywords),
+        searchFAQs(keywords)
+      ]);
+      const responseContent = generateConversationalResponse(userMessage, keywords, programs, documents, faqs);
 
       // Simulate human-like typing delay
       const thinkingDelay = 800 + Math.random() * 700; // 800-1500ms
