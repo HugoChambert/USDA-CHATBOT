@@ -66,6 +66,15 @@ const USDA_KEYWORDS = [
   'usda', 'program', 'assistance', 'support', 'help'
 ];
 
+const ASSISTANCE_CATEGORIES = [
+  { id: 'housing', label: 'Housing', icon: '🏠' },
+  { id: 'business', label: 'Business', icon: '💼' },
+  { id: 'broadband', label: 'Broadband', icon: '📡' },
+  { id: 'energy', label: 'Energy', icon: '⚡' },
+  { id: 'water', label: 'Water', icon: '💧' },
+  { id: 'community', label: 'Community', icon: '🏛️' },
+];
+
 function App() {
   console.log('App component loaded');
   console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
@@ -76,6 +85,7 @@ function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -246,40 +256,44 @@ function App() {
 
     if (!isOnTopic(query)) {
       return {
-        content: language === 'en' ? "Unfortunately, I can't help with that. However, I can assist with:\n• Housing loans and grants\n• Business financing\n• Rural broadband\n• Renewable energy\n• Water systems\n• Community facilities" :
-                 language === 'es' ? "Desafortunadamente, no puedo ayudar con eso. Sin embargo, puedo ayudar con:\n• Préstamos y subvenciones de vivienda\n• Financiamiento empresarial\n• Banda ancha rural\n• Energía renovable\n• Sistemas de agua\n• Instalaciones comunitarias" :
-                 language === 'zh' ? "很抱歉，我无法帮助解决这个问题。但是，我可以帮助：\n• 住房贷款和补助\n• 商业融资\n• 农村宽带\n• 可再生能源\n• 供水系统\n• 社区设施" :
-                 "Rất tiếc, tôi không thể giúp về điều đó. Tuy nhiên, tôi có thể hỗ trợ:\n• Các khoản vay và trợ cấp nhà ở\n• Tài chính doanh nghiệp\n• Băng thông rộng nông thôn\n• Năng lượng tái tạo\n• Hệ thống nước\n• Cơ sở vật chất cộng đồng"
+        content: language === 'en' ? "I'm here to help with USDA Rural Development programs! I can provide detailed information about:\n\n🏠 Housing - Direct loans, guarantees, repair grants\n💼 Business - Financing, development grants, cooperatives\n📡 Broadband - ReConnect, Community Connect programs\n⚡ Energy - REAP grants, renewable energy systems\n💧 Water - Infrastructure loans and grants\n🏛️ Community - Healthcare, education, public facilities\n\nWhich area interests you most?" :
+                 language === 'es' ? "¡Estoy aquí para ayudar con los programas de Desarrollo Rural del USDA! Puedo proporcionar información detallada sobre:\n\n🏠 Vivienda - Préstamos directos, garantías, subvenciones\n💼 Negocios - Financiamiento, subvenciones de desarrollo\n📡 Banda ancha - Programas ReConnect, Community Connect\n⚡ Energía - Subvenciones REAP, sistemas de energía renovable\n💧 Agua - Préstamos y subvenciones de infraestructura\n🏛️ Comunidad - Salud, educación, instalaciones públicas\n\n¿Qué área le interesa más?" :
+                 language === 'zh' ? "我在这里帮助您了解美国农业部农村发展项目！我可以提供有关以下方面的详细信息：\n\n🏠 住房 - 直接贷款、担保、维修补助\n💼 商业 - 融资、发展补助、合作社\n📡 宽带 - ReConnect、Community Connect项目\n⚡ 能源 - REAP补助、可再生能源系统\n💧 水 - 基础设施贷款和补助\n🏛️ 社区 - 医疗、教育、公共设施\n\n您对哪个领域最感兴趣？" :
+                 "Tôi ở đây để hỗ trợ các chương trình Phát triển Nông thôn USDA! Tôi có thể cung cấp thông tin chi tiết về:\n\n🏠 Nhà ở - Vay trực tiếp, bảo lãnh, trợ cấp sửa chữa\n💼 Kinh doanh - Tài chính, trợ cấp phát triển, hợp tác xã\n📡 Băng thông rộng - Chương trình ReConnect, Community Connect\n⚡ Năng lượng - Trợ cấp REAP, hệ thống năng lượng tái tạo\n💧 Nước - Vay và trợ cấp cơ sở hạ tầng\n🏛️ Cộng đồng - Y tế, giáo dục, cơ sở công cộng\n\nBạn quan tâm đến lĩnh vực nào nhất?"
       };
     }
 
     if (programs.length === 0 && documents.length === 0 && faqs.length === 0) {
       const mainKeyword = keywords[0] || 'that topic';
       return {
-        content: language === 'en' ? `Unfortunately, I can't find specific information about "${mainKeyword}". However, I can help with other USDA programs. What would you like to know about?` :
-                 language === 'es' ? `Desafortunadamente, no puedo encontrar información específica sobre "${mainKeyword}". Sin embargo, puedo ayudar con otros programas del USDA. ¿Sobre qué te gustaría saber?` :
-                 language === 'zh' ? `很抱歉，我找不到关于"${mainKeyword}"的具体信息。但是，我可以帮助您了解其他USDA项目。您想了解什么？` :
-                 `Rất tiếc, tôi không thể tìm thấy thông tin cụ thể về "${mainKeyword}". Tuy nhiên, tôi có thể giúp với các chương trình USDA khác. Bạn muốn biết gì?`
+        content: language === 'en' ? `I understand you're interested in "${mainKeyword}". While I don't have specific matches right now, let me help you find what you need.\n\nCould you tell me more about:\n• Are you looking for loans or grants?\n• Is this for personal or business use?\n• What's your main goal?\n\nThis will help me find the best programs for you!` :
+                 language === 'es' ? `Entiendo que está interesado en "${mainKeyword}". Aunque no tengo coincidencias específicas ahora mismo, permítame ayudarlo a encontrar lo que necesita.\n\n¿Podría decirme más sobre:\n• ¿Busca préstamos o subvenciones?\n• ¿Es para uso personal o comercial?\n• ¿Cuál es su objetivo principal?\n\n¡Esto me ayudará a encontrar los mejores programas para usted!` :
+                 language === 'zh' ? `我明白您对"${mainKeyword}"感兴趣。虽然我现在没有具体匹配项，但让我帮您找到您需要的内容。\n\n您能告诉我更多关于：\n• 您在寻找贷款还是补助？\n• 这是用于个人还是商业用途？\n• 您的主要目标是什么？\n\n这将帮助我为您找到最好的项目！` :
+                 `Tôi hiểu bạn quan tâm đến "${mainKeyword}". Mặc dù tôi không có kết quả phù hợp cụ thể ngay bây giờ, hãy để tôi giúp bạn tìm thấy những gì bạn cần.\n\nBạn có thể cho tôi biết thêm về:\n• Bạn đang tìm khoản vay hay trợ cấp?\n• Đây là cho mục đích cá nhân hay kinh doanh?\n• Mục tiêu chính của bạn là gì?\n\nĐiều này sẽ giúp tôi tìm các chương trình tốt nhất cho bạn!`
       };
     }
 
     const options: MessageOption[] = [];
     let response = '';
 
-    // If only 1 FAQ matches, show full answer
+    // If only 1 FAQ matches, show full answer with personality
     if (faqs.length === 1) {
-      response = faqs[0].answer;
+      const intro = language === 'en' ? 'Great question! Here\'s what I can tell you:\n\n' :
+                    language === 'es' ? '¡Excelente pregunta! Esto es lo que puedo decirte:\n\n' :
+                    language === 'zh' ? '很好的问题！这是我可以告诉你的：\n\n' :
+                    'Câu hỏi hay! Đây là những gì tôi có thể nói với bạn:\n\n';
+      response = intro + faqs[0].answer;
       if (programs.length > 0 || documents.length > 0) {
-        response += '\n\n' + (language === 'en' ? 'Related resources available below.' :
-                               language === 'es' ? 'Recursos relacionados disponibles a continuación.' :
-                               language === 'zh' ? '相关资源如下。' :
-                               'Tài nguyên liên quan bên dưới.');
+        response += '\n\n' + (language === 'en' ? '📚 I also found some helpful resources below that you might want to check out!' :
+                               language === 'es' ? '📚 ¡También encontré algunos recursos útiles a continuación que quizás quieras revisar!' :
+                               language === 'zh' ? '📚 我还找到了一些有用的资源，您可能想查看！' :
+                               '📚 Tôi cũng tìm thấy một số tài nguyên hữu ích bên dưới mà bạn có thể muốn xem!');
       }
     } else if (faqs.length > 1) {
-      response = language === 'en' ? 'I found several answers to your question. Please select one:' :
-                 language === 'es' ? 'Encontré varias respuestas a tu pregunta. Por favor selecciona una:' :
-                 language === 'zh' ? '我找到了几个答案。请选择一个：' :
-                 'Tôi tìm thấy một số câu trả lời. Vui lòng chọn một:';
+      response = language === 'en' ? 'I found several helpful answers for you! Click on any question below to see the full details:' :
+                 language === 'es' ? '¡Encontré varias respuestas útiles para ti! Haz clic en cualquier pregunta a continuación para ver los detalles completos:' :
+                 language === 'zh' ? '我为您找到了几个有用的答案！单击下面的任何问题以查看完整详细信息：' :
+                 'Tôi tìm thấy một số câu trả lời hữu ích cho bạn! Nhấp vào bất kỳ câu hỏi nào bên dưới để xem chi tiết đầy đủ:';
     }
 
     // Add FAQs as options
@@ -292,13 +306,13 @@ function App() {
       });
     });
 
-    // If we have programs, add them as options
+    // If we have programs, add them as options with enthusiasm
     if (programs.length > 0) {
       if (!response) {
-        response = language === 'en' ? `I found ${programs.length} program${programs.length > 1 ? 's' : ''} that may help:` :
-                   language === 'es' ? `Encontré ${programs.length} programa${programs.length > 1 ? 's' : ''} que puede${programs.length > 1 ? 'n' : ''} ayudar:` :
-                   language === 'zh' ? `我找到了 ${programs.length} 个项目可能有帮助：` :
-                   `Tôi tìm thấy ${programs.length} chương trình có thể giúp đỡ:`;
+        response = language === 'en' ? `Perfect! I found ${programs.length} excellent program${programs.length > 1 ? 's' : ''} that ${programs.length > 1 ? 'match' : 'matches'} your needs. ${programs.length > 1 ? 'Click on any to learn more:' : 'Here\'s what I found:'}` :
+                   language === 'es' ? `¡Perfecto! Encontré ${programs.length} programa${programs.length > 1 ? 's' : ''} excelente${programs.length > 1 ? 's' : ''} que ${programs.length > 1 ? 'coinciden' : 'coincide'} con tus necesidades. ${programs.length > 1 ? 'Haz clic en cualquiera para obtener más información:' : 'Esto es lo que encontré:'}` :
+                   language === 'zh' ? `太好了！我找到了 ${programs.length} 个符合您需求的优秀项目。${programs.length > 1 ? '点击任何一个以了解更多信息：' : '这是我找到的：'}` :
+                   `Tuyệt vời! Tôi tìm thấy ${programs.length} chương trình xuất sắc phù hợp với nhu cầu của bạn. ${programs.length > 1 ? 'Nhấp vào bất kỳ để tìm hiểu thêm:' : 'Đây là những gì tôi tìm thấy:'}`;
       }
 
       programs.forEach((program) => {
@@ -364,6 +378,7 @@ function App() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
+      setSelectedCategory(null);
     } catch (error) {
       console.error('Error:', error);
       const errorMsg: Message = {
@@ -498,31 +513,40 @@ function App() {
       responseContent = `${program.title}\n\n${shortDesc}`;
 
       if (program.eligibility) {
-        const shortElig = program.eligibility.length > 150 ? program.eligibility.substring(0, 150) + '...' : program.eligibility;
-        responseContent += `\n\nWho Can Apply: ${shortElig}`;
+        responseContent += `\n\n✓ Eligibility:\n${program.eligibility}`;
       }
 
       if (program.benefits) {
-        const shortBenefits = program.benefits.length > 150 ? program.benefits.substring(0, 150) + '...' : program.benefits;
-        responseContent += `\n\nKey Benefits: ${shortBenefits}`;
+        responseContent += `\n\n🎯 Key Benefits:\n${program.benefits}`;
       }
 
       if (program.application_process) {
-        const shortProcess = program.application_process.length > 150 ? program.application_process.substring(0, 150) + '...' : program.application_process;
-        responseContent += `\n\nHow to Apply: ${shortProcess}`;
+        responseContent += `\n\n📝 How to Apply:\n${program.application_process}`;
       }
 
       if (program.url) {
-        responseContent += `\n\nFull Details: ${program.url}`;
+        responseContent += `\n\n🔗 Learn More: ${program.url}`;
       }
+
+      responseContent += language === 'en' ? '\n\nNeed help with your application or have questions? Just ask!' :
+                         language === 'es' ? '\n\n¿Necesitas ayuda con tu solicitud o tienes preguntas? ¡Sólo pregunta!' :
+                         language === 'zh' ? '\n\n需要申请帮助或有问题吗？只管问！' :
+                         '\n\nCần giúp đỡ với đơn đăng ký hoặc có câu hỏi? Cứ hỏi!';
     } else if (option.type === 'document') {
       const doc = option.data as Document;
-      const shortDesc = doc.description && doc.description.length > 150 ? doc.description.substring(0, 150) + '...' : doc.description;
-      responseContent = `${doc.title}`;
-      if (shortDesc) {
-        responseContent += `\n\n${shortDesc}`;
+      const intro = language === 'en' ? 'Here\'s the document you requested:\n\n' :
+                    language === 'es' ? 'Aquí está el documento que solicitaste:\n\n' :
+                    language === 'zh' ? '这是您请求的文档：\n\n' :
+                    'Đây là tài liệu bạn yêu cầu:\n\n';
+      responseContent = intro + `📄 ${doc.title}`;
+      if (doc.description) {
+        responseContent += `\n\n${doc.description}`;
       }
-      responseContent += `\n\nDownload: ${doc.document_url}`;
+      responseContent += `\n\n⬇️ Download: ${doc.document_url}`;
+      responseContent += language === 'en' ? '\n\nLet me know if you need help understanding any part of this document!' :
+                         language === 'es' ? '\n\n¡Avísame si necesitas ayuda para entender alguna parte de este documento!' :
+                         language === 'zh' ? '\n\n如果您需要帮助理解本文档的任何部分，请告诉我！' :
+                         '\n\nHãy cho tôi biết nếu bạn cần giúp hiểu bất kỳ phần nào của tài liệu này!';
     }
 
     const assistantMsg: Message = {
@@ -601,6 +625,75 @@ function App() {
               >
                 <X size={20} className="md:w-[18px] md:h-[18px]" />
               </button>
+            </div>
+          </div>
+
+          {/* Category Navigation Bar */}
+          <div className="bg-white border-b border-gray-200 px-3 py-2 overflow-x-auto">
+            <div className="flex gap-2 min-w-max">
+              {ASSISTANCE_CATEGORIES.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={async () => {
+                    if (loading) return;
+                    setSelectedCategory(category.id);
+                    const categoryQuery = `Tell me about ${category.label.toLowerCase()} programs`;
+
+                    const userMsg: Message = {
+                      id: Date.now().toString(),
+                      role: 'user',
+                      content: categoryQuery,
+                      timestamp: new Date(),
+                    };
+
+                    setMessages((prev) => [...prev, userMsg]);
+                    setLoading(true);
+
+                    try {
+                      const keywords = extractKeywords(categoryQuery);
+                      const [programs, documents, faqs] = await Promise.all([
+                        searchPrograms(keywords),
+                        searchDocuments(keywords),
+                        searchFAQs(keywords)
+                      ]);
+                      const { content: responseContent, options } = generateConversationalResponse(categoryQuery, keywords, programs, documents, faqs);
+
+                      const thinkingDelay = 800 + Math.random() * 700;
+                      await new Promise(resolve => setTimeout(resolve, thinkingDelay));
+
+                      const assistantMsg: Message = {
+                        id: (Date.now() + 1).toString(),
+                        role: 'assistant',
+                        content: responseContent,
+                        timestamp: new Date(),
+                        options,
+                      };
+
+                      setMessages((prev) => [...prev, assistantMsg]);
+                    } catch (error) {
+                      console.error('Error:', error);
+                      const errorMsg: Message = {
+                        id: (Date.now() + 1).toString(),
+                        role: 'assistant',
+                        content: translations[language].errorMessage,
+                        timestamp: new Date(),
+                      };
+                      setMessages((prev) => [...prev, errorMsg]);
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                    selectedCategory === category.id
+                      ? 'bg-slate-800 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
+                >
+                  <span>{category.icon}</span>
+                  <span>{category.label}</span>
+                </button>
+              ))}
             </div>
           </div>
 

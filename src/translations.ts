@@ -19,7 +19,7 @@ export interface Translations {
 
 export const translations: Record<Language, Translations> = {
   en: {
-    greeting: 'Hello! 👋\nI am your personal AI assistant.\nAsk me any questions regarding the USDA.',
+    greeting: 'Hello! I\'m your USDA Rural Development assistant.\n\nI can help you discover programs and resources for:\n• Housing loans and grants\n• Business financing and development\n• Broadband and telecommunications\n• Renewable energy programs\n• Water and wastewater systems\n• Community facilities\n\nUse the categories above or ask me anything!',
     placeholder: 'Message...',
     uploadFile: 'Upload File',
     offTopic: "I'm specifically designed to help with USDA Rural Development programs. I can answer questions about housing, business development, broadband, energy, water systems, and community facilities in rural areas. What would you like to know about these topics?",
@@ -35,7 +35,7 @@ export const translations: Record<Language, Translations> = {
     }
   },
   es: {
-    greeting: 'Hola! 👋\nSoy tu asistente personal de IA.\nHazme cualquier pregunta sobre el USDA.',
+    greeting: '¡Hola! Soy tu asistente de Desarrollo Rural del USDA.\n\nPuedo ayudarte a descubrir programas y recursos para:\n• Préstamos y subvenciones de vivienda\n• Financiamiento y desarrollo empresarial\n• Banda ancha y telecomunicaciones\n• Programas de energía renovable\n• Sistemas de agua y aguas residuales\n• Instalaciones comunitarias\n\n¡Usa las categorías arriba o pregúntame lo que quieras!',
     placeholder: 'Mensaje...',
     uploadFile: 'Subir Archivo',
     offTopic: 'Estoy específicamente diseñado para ayudar con los programas de Desarrollo Rural del USDA. Puedo responder preguntas sobre vivienda, desarrollo empresarial, banda ancha, energía, sistemas de agua e instalaciones comunitarias en áreas rurales. ¿Qué te gustaría saber sobre estos temas?',
@@ -51,7 +51,7 @@ export const translations: Record<Language, Translations> = {
     }
   },
   zh: {
-    greeting: '你好！👋\n我是你的个人AI助手。\n请问我关于美国农业部的任何问题。',
+    greeting: '你好！我是你的美国农业部农村发展助手。\n\n我可以帮助您发现以下项目和资源：\n• 住房贷款和补助\n• 商业融资和发展\n• 宽带和电信\n• 可再生能源项目\n• 供水和废水系统\n• 社区设施\n\n使用上面的类别或问我任何问题！',
     placeholder: '消息...',
     uploadFile: '上传文件',
     offTopic: '我专门帮助处理美国农业部农村发展项目。我可以回答有关农村地区的住房、商业发展、宽带、能源、供水系统和社区设施的问题。您想了解这些主题的什么内容？',
@@ -67,7 +67,7 @@ export const translations: Record<Language, Translations> = {
     }
   },
   vi: {
-    greeting: 'Xin chào! 👋\nTôi là trợ lý AI cá nhân của bạn.\nHãy hỏi tôi bất kỳ câu hỏi nào về USDA.',
+    greeting: 'Xin chào! Tôi là trợ lý Phát triển Nông thôn USDA của bạn.\n\nTôi có thể giúp bạn khám phá các chương trình và tài nguyên cho:\n• Các khoản vay và trợ cấp nhà ở\n• Tài chính và phát triển kinh doanh\n• Băng thông rộng và viễn thông\n• Các chương trình năng lượng tái tạo\n• Hệ thống nước và nước thải\n• Cơ sở vật chất cộng đồng\n\nSử dụng các danh mục ở trên hoặc hỏi tôi bất cứ điều gì!',
     placeholder: 'Tin nhắn...',
     uploadFile: 'Tải Lên Tệp',
     offTopic: 'Tôi được thiết kế đặc biệt để hỗ trợ các chương trình Phát triển Nông thôn USDA. Tôi có thể trả lời các câu hỏi về nhà ở, phát triển kinh doanh, băng thông rộng, năng lượng, hệ thống nước và cơ sở vật chất cộng đồng ở các khu vực nông thôn. Bạn muốn biết gì về các chủ đề này?',
