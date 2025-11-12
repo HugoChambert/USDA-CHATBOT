@@ -54,17 +54,16 @@ interface FAQ {
   category: string | null;
 }
 
-const USDA_KEYWORDS = [
-  'housing', 'home', 'mortgage', 'rent', 'rental', 'loan', 'grant',
-  'business', 'entrepreneur', 'small business', 'cooperative',
-  'broadband', 'internet', 'telecommunications', 'connectivity',
-  'energy', 'renewable', 'solar', 'efficiency', 'electric',
-  'water', 'waste', 'wastewater', 'disposal', 'sanitation',
-  'community', 'facilities', 'health', 'healthcare', 'hospital',
-  'rural', 'farm', 'agriculture', 'farming', 'producer',
-  'development', 'infrastructure', 'funding', 'finance',
-  'usda', 'program', 'assistance', 'support', 'help'
-];
+const CATEGORY_KEYWORDS = {
+  housing: ['housing', 'home', 'house', 'mortgage', 'rent', 'rental', 'apartment', 'residence', 'dwelling', 'homeowner', 'buyer', 'purchase', 'repair', 'rehabilitation', 'multifamily', 'mobile home', 'manufactured home'],
+  business: ['business', 'entrepreneur', 'small business', 'company', 'enterprise', 'startup', 'cooperative', 'coop', 'industry', 'manufacturing', 'retail', 'commercial', 'venture', 'microenterprise', 'value added', 'producer', 'agriculture business', 'farm business'],
+  broadband: ['broadband', 'internet', 'connectivity', 'telecommunications', 'telecom', 'fiber', 'wireless', 'network', 'bandwidth', 'digital', 'online', 'web', 'wifi', 'cell tower', 'cellular', 'reconnect', 'community connect'],
+  energy: ['energy', 'renewable', 'solar', 'wind', 'geothermal', 'biomass', 'hydropower', 'efficiency', 'electric', 'electricity', 'power', 'reap', 'conservation', 'sustainable', 'green energy', 'clean energy'],
+  water: ['water', 'wastewater', 'sewer', 'sewage', 'waste disposal', 'sanitation', 'stormwater', 'drainage', 'treatment', 'drinking water', 'well', 'aquifer', 'pipeline', 'infrastructure'],
+  community: ['community', 'facilities', 'facility', 'health', 'healthcare', 'hospital', 'clinic', 'fire station', 'police', 'library', 'school', 'education', 'childcare', 'daycare', 'senior center', 'recreation', 'public safety', 'emergency services', 'telemedicine']
+};
+
+const ALL_KEYWORDS = Object.values(CATEGORY_KEYWORDS).flat();
 
 const ASSISTANCE_CATEGORIES = [
   { id: 'housing', icon: '🏠' },
@@ -157,12 +156,42 @@ function App() {
 
   const extractKeywords = (text: string): string[] => {
     const keywords: string[] = [];
-    USDA_KEYWORDS.forEach(keyword => {
-      if (text.toLowerCase().includes(keyword)) {
+    const lowerText = text.toLowerCase();
+
+    ALL_KEYWORDS.forEach(keyword => {
+      if (lowerText.includes(keyword.toLowerCase())) {
         keywords.push(keyword);
       }
     });
     return [...new Set(keywords)];
+  };
+
+  const detectCategory = (text: string): string | null => {
+    const lowerText = text.toLowerCase();
+    const categoryScores: Record<string, number> = {
+      housing: 0,
+      business: 0,
+      broadband: 0,
+      energy: 0,
+      water: 0,
+      community: 0
+    };
+
+    // Score each category based on keyword matches
+    Object.entries(CATEGORY_KEYWORDS).forEach(([category, keywords]) => {
+      keywords.forEach(keyword => {
+        if (lowerText.includes(keyword.toLowerCase())) {
+          categoryScores[category] += 1;
+        }
+      });
+    });
+
+    // Find category with highest score
+    const maxScore = Math.max(...Object.values(categoryScores));
+    if (maxScore === 0) return null;
+
+    const topCategory = Object.entries(categoryScores).find(([_, score]) => score === maxScore);
+    return topCategory ? topCategory[0] : null;
   };
 
   const isOnTopic = (text: string): boolean => {
@@ -170,20 +199,28 @@ function App() {
     return keywords.length > 0;
   };
 
-  const searchPrograms = async (keywords: string[]): Promise<Program[]> => {
+  const searchPrograms = async (keywords: string[], userQuery: string): Promise<Program[]> => {
     if (keywords.length === 0 || !supabase) return [];
 
     try {
+      // Detect primary category from user query
+      const detectedCategory = detectCategory(userQuery);
+
       let query = supabase
         .from('programs')
         .select('id, title, description, url, category, eligibility, benefits, application_process');
 
+      // If we detected a specific category, filter by it first
+      if (detectedCategory) {
+        query = query.eq('category', detectedCategory);
+      }
+
       // Build OR conditions for each keyword
       const conditions = keywords.map(keyword =>
-        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%`
+        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,eligibility.ilike.%${keyword}%,benefits.ilike.%${keyword}%`
       ).join(',');
 
-      const { data, error } = await query.or(conditions).limit(5);
+      const { data, error } = await query.or(conditions).limit(10);
 
       if (error) {
         console.error('Search error:', error);
@@ -196,7 +233,9 @@ function App() {
         const searchText = `${program.title} ${program.description} ${program.category}`.toLowerCase();
         keywords.forEach(keyword => {
           const lowerKeyword = keyword.toLowerCase();
-          if (program.category?.toLowerCase() === lowerKeyword) score += 10;
+          // Boost score if program category matches detected category
+          if (detectedCategory && program.category === detectedCategory) score += 20;
+          if (program.category?.toLowerCase().includes(lowerKeyword)) score += 10;
           if (program.title?.toLowerCase().includes(lowerKeyword)) score += 5;
           if (program.description?.toLowerCase().includes(lowerKeyword)) score += 2;
         });
@@ -210,19 +249,25 @@ function App() {
     }
   };
 
-  const searchDocuments = async (keywords: string[]): Promise<Document[]> => {
+  const searchDocuments = async (keywords: string[], userQuery: string): Promise<Document[]> => {
     if (keywords.length === 0 || !supabase) return [];
 
     try {
+      const detectedCategory = detectCategory(userQuery);
+
+      let query = supabase
+        .from('documents')
+        .select('id, title, description, document_url, document_type, category');
+
+      if (detectedCategory) {
+        query = query.eq('category', detectedCategory);
+      }
+
       const conditions = keywords.map(keyword =>
-        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%`
+        `title.ilike.%${keyword}%,description.ilike.%${keyword}%`
       ).join(',');
 
-      const { data, error } = await supabase
-        .from('documents')
-        .select('id, title, description, document_url, document_type, category')
-        .or(conditions)
-        .limit(3);
+      const { data, error } = await query.or(conditions).limit(5);
 
       if (error) {
         console.error('Document search error:', error);
@@ -234,7 +279,8 @@ function App() {
         let score = 0;
         keywords.forEach(keyword => {
           const lowerKeyword = keyword.toLowerCase();
-          if (doc.category?.toLowerCase() === lowerKeyword) score += 10;
+          if (detectedCategory && doc.category === detectedCategory) score += 20;
+          if (doc.category?.toLowerCase().includes(lowerKeyword)) score += 10;
           if (doc.title?.toLowerCase().includes(lowerKeyword)) score += 5;
         });
         return { ...doc, score };
@@ -247,19 +293,25 @@ function App() {
     }
   };
 
-  const searchFAQs = async (keywords: string[]): Promise<FAQ[]> => {
+  const searchFAQs = async (keywords: string[], userQuery: string): Promise<FAQ[]> => {
     if (keywords.length === 0 || !supabase) return [];
 
     try {
+      const detectedCategory = detectCategory(userQuery);
+
+      let query = supabase
+        .from('faqs')
+        .select('id, question, answer, category');
+
+      if (detectedCategory) {
+        query = query.eq('category', detectedCategory);
+      }
+
       const conditions = keywords.map(keyword =>
-        `question.ilike.%${keyword}%,answer.ilike.%${keyword}%,category.ilike.%${keyword}%`
+        `question.ilike.%${keyword}%,answer.ilike.%${keyword}%`
       ).join(',');
 
-      const { data, error } = await supabase
-        .from('faqs')
-        .select('id, question, answer, category')
-        .or(conditions)
-        .limit(3);
+      const { data, error } = await query.or(conditions).limit(5);
 
       if (error) {
         console.error('FAQ search error:', error);
@@ -271,7 +323,8 @@ function App() {
         let score = 0;
         keywords.forEach(keyword => {
           const lowerKeyword = keyword.toLowerCase();
-          if (faq.category?.toLowerCase() === lowerKeyword) score += 10;
+          if (detectedCategory && faq.category === detectedCategory) score += 20;
+          if (faq.category?.toLowerCase().includes(lowerKeyword)) score += 10;
           if (faq.question?.toLowerCase().includes(lowerKeyword)) score += 5;
           if (faq.answer?.toLowerCase().includes(lowerKeyword)) score += 2;
         });
@@ -399,9 +452,9 @@ function App() {
     try {
       const keywords = extractKeywords(userMessage);
       const [programs, documents, faqs] = await Promise.all([
-        searchPrograms(keywords),
-        searchDocuments(keywords),
-        searchFAQs(keywords)
+        searchPrograms(keywords, userMessage),
+        searchDocuments(keywords, userMessage),
+        searchFAQs(keywords, userMessage)
       ]);
       const { content: responseContent, options } = generateConversationalResponse(userMessage, keywords, programs, documents, faqs);
 
@@ -769,9 +822,9 @@ function App() {
                     try {
                       const keywords = extractKeywords(categoryQuery);
                       const [programs, documents, faqs] = await Promise.all([
-                        searchPrograms(keywords),
-                        searchDocuments(keywords),
-                        searchFAQs(keywords)
+                        searchPrograms(keywords, categoryQuery),
+                        searchDocuments(keywords, categoryQuery),
+                        searchFAQs(keywords, categoryQuery)
                       ]);
                       const { content: responseContent, options } = generateConversationalResponse(categoryQuery, keywords, programs, documents, faqs);
 
