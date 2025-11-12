@@ -9,6 +9,14 @@ export interface Translations {
   foundPrograms: string;
   moreDetails: string;
   errorMessage: string;
+  categories: {
+    housing: string;
+    business: string;
+    broadband: string;
+    energy: string;
+    water: string;
+    community: string;
+  };
   languages: {
     en: string;
     es: string;
@@ -27,6 +35,14 @@ export const translations: Record<Language, Translations> = {
     foundPrograms: 'Great question! I found {count} relevant program{plural} that might help:',
     moreDetails: '\n\nNeed more information? Just ask!',
     errorMessage: 'I apologize, but I encountered an error processing your question. Please try asking again.',
+    categories: {
+      housing: 'Housing',
+      business: 'Business',
+      broadband: 'Broadband',
+      energy: 'Energy',
+      water: 'Water',
+      community: 'Community'
+    },
     languages: {
       en: 'English',
       es: 'Español',
@@ -43,6 +59,14 @@ export const translations: Record<Language, Translations> = {
     foundPrograms: '¡Excelente pregunta! Encontré {count} programa{plural} relevante{plural} que podría{pluralVerb} ayudar:',
     moreDetails: '\n\n¿Necesitas más información? ¡Solo pregunta!',
     errorMessage: 'Me disculpo, pero encontré un error al procesar tu pregunta. Por favor intenta preguntar de nuevo.',
+    categories: {
+      housing: 'Vivienda',
+      business: 'Negocios',
+      broadband: 'Banda Ancha',
+      energy: 'Energía',
+      water: 'Agua',
+      community: 'Comunidad'
+    },
     languages: {
       en: 'English',
       es: 'Español',
@@ -59,6 +83,14 @@ export const translations: Record<Language, Translations> = {
     foundPrograms: '好问题！我找到了{count}个可能有帮助的相关项目：',
     moreDetails: '\n\n需要更多信息吗？请随时提问！',
     errorMessage: '抱歉，我在处理您的问题时遇到了错误。请再试一次。',
+    categories: {
+      housing: '住房',
+      business: '商业',
+      broadband: '宽带',
+      energy: '能源',
+      water: '水',
+      community: '社区'
+    },
     languages: {
       en: 'English',
       es: 'Español',
@@ -75,6 +107,14 @@ export const translations: Record<Language, Translations> = {
     foundPrograms: 'Câu hỏi hay! Tôi đã tìm thấy {count} chương trình liên quan có thể giúp ích:',
     moreDetails: '\n\nCần thêm thông tin? Cứ hỏi nhé!',
     errorMessage: 'Tôi xin lỗi, nhưng tôi gặp lỗi khi xử lý câu hỏi của bạn. Vui lòng thử hỏi lại.',
+    categories: {
+      housing: 'Nhà ở',
+      business: 'Kinh doanh',
+      broadband: 'Băng thông rộng',
+      energy: 'Năng lượng',
+      water: 'Nước',
+      community: 'Cộng đồng'
+    },
     languages: {
       en: 'English',
       es: 'Español',

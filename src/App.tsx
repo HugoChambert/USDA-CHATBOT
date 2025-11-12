@@ -67,13 +67,13 @@ const USDA_KEYWORDS = [
 ];
 
 const ASSISTANCE_CATEGORIES = [
-  { id: 'housing', label: 'Housing', icon: '🏠' },
-  { id: 'business', label: 'Business', icon: '💼' },
-  { id: 'broadband', label: 'Broadband', icon: '📡' },
-  { id: 'energy', label: 'Energy', icon: '⚡' },
-  { id: 'water', label: 'Water', icon: '💧' },
-  { id: 'community', label: 'Community', icon: '🏛️' },
-];
+  { id: 'housing', icon: '🏠' },
+  { id: 'business', icon: '💼' },
+  { id: 'broadband', icon: '📡' },
+  { id: 'energy', icon: '⚡' },
+  { id: 'water', icon: '💧' },
+  { id: 'community', icon: '🏛️' },
+] as const;
 
 function App() {
   console.log('App component loaded');
@@ -174,21 +174,36 @@ function App() {
     if (keywords.length === 0 || !supabase) return [];
 
     try {
-      const searchConditions = keywords.map(keyword =>
-        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%,eligibility.ilike.%${keyword}%,benefits.ilike.%${keyword}%`
+      let query = supabase
+        .from('programs')
+        .select('id, title, description, url, category, eligibility, benefits, application_process');
+
+      // Build OR conditions for each keyword
+      const conditions = keywords.map(keyword =>
+        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%`
       ).join(',');
 
-      const { data, error } = await supabase
-        .from('programs')
-        .select('id, title, description, url, category, eligibility, benefits, application_process')
-        .or(searchConditions)
-        .limit(5);
+      const { data, error } = await query.or(conditions).limit(5);
 
       if (error) {
         console.error('Search error:', error);
         return [];
       }
-      return data || [];
+
+      // Score and sort results by relevance
+      const scored = (data || []).map(program => {
+        let score = 0;
+        const searchText = `${program.title} ${program.description} ${program.category}`.toLowerCase();
+        keywords.forEach(keyword => {
+          const lowerKeyword = keyword.toLowerCase();
+          if (program.category?.toLowerCase() === lowerKeyword) score += 10;
+          if (program.title?.toLowerCase().includes(lowerKeyword)) score += 5;
+          if (program.description?.toLowerCase().includes(lowerKeyword)) score += 2;
+        });
+        return { ...program, score };
+      });
+
+      return scored.filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
     } catch (error) {
       console.error('Search error:', error);
       return [];
@@ -199,21 +214,33 @@ function App() {
     if (keywords.length === 0 || !supabase) return [];
 
     try {
-      const searchConditions = keywords.map(keyword =>
-        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%,document_type.ilike.%${keyword}%`
+      const conditions = keywords.map(keyword =>
+        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,category.ilike.%${keyword}%`
       ).join(',');
 
       const { data, error } = await supabase
         .from('documents')
         .select('id, title, description, document_url, document_type, category')
-        .or(searchConditions)
+        .or(conditions)
         .limit(3);
 
       if (error) {
         console.error('Document search error:', error);
         return [];
       }
-      return data || [];
+
+      // Score by relevance
+      const scored = (data || []).map(doc => {
+        let score = 0;
+        keywords.forEach(keyword => {
+          const lowerKeyword = keyword.toLowerCase();
+          if (doc.category?.toLowerCase() === lowerKeyword) score += 10;
+          if (doc.title?.toLowerCase().includes(lowerKeyword)) score += 5;
+        });
+        return { ...doc, score };
+      });
+
+      return scored.filter(d => d.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
     } catch (error) {
       console.error('Document search error:', error);
       return [];
@@ -224,21 +251,34 @@ function App() {
     if (keywords.length === 0 || !supabase) return [];
 
     try {
-      const searchConditions = keywords.map(keyword =>
-        `question.ilike.%${keyword}%,answer.ilike.%${keyword}%`
+      const conditions = keywords.map(keyword =>
+        `question.ilike.%${keyword}%,answer.ilike.%${keyword}%,category.ilike.%${keyword}%`
       ).join(',');
 
       const { data, error } = await supabase
         .from('faqs')
         .select('id, question, answer, category')
-        .or(searchConditions)
-        .limit(2);
+        .or(conditions)
+        .limit(3);
 
       if (error) {
         console.error('FAQ search error:', error);
         return [];
       }
-      return data || [];
+
+      // Score by relevance
+      const scored = (data || []).map(faq => {
+        let score = 0;
+        keywords.forEach(keyword => {
+          const lowerKeyword = keyword.toLowerCase();
+          if (faq.category?.toLowerCase() === lowerKeyword) score += 10;
+          if (faq.question?.toLowerCase().includes(lowerKeyword)) score += 5;
+          if (faq.answer?.toLowerCase().includes(lowerKeyword)) score += 2;
+        });
+        return { ...faq, score };
+      });
+
+      return scored.filter(f => f.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
     } catch (error) {
       console.error('FAQ search error:', error);
       return [];
@@ -574,7 +614,7 @@ function App() {
       {isOpen && (
         <div
           ref={chatContainerRef}
-          className={`w-full md:max-w-md mx-auto md:absolute ${isClosing ? 'animate-slide-down' : 'animate-slide-up'}`}
+          className={`w-full max-w-full md:max-w-md mx-auto md:absolute ${isClosing ? 'animate-slide-down' : 'animate-slide-up'}`}
           style={{
             left: position.x || undefined,
             top: position.y || undefined,
@@ -582,23 +622,23 @@ function App() {
             cursor: isDragging ? 'grabbing' : 'auto',
           }}
         >
-          <div className="bg-white md:rounded-lg shadow-2xl overflow-hidden flex flex-col h-screen md:h-[600px]">
+          <div className="bg-white md:rounded-lg shadow-2xl overflow-hidden flex flex-col h-screen md:h-[600px] md:max-h-[90vh]">
           {/* Header */}
           <div
-            className="bg-gradient-to-r from-slate-800 to-slate-700 px-4 py-3 md:py-2.5 flex items-center justify-between md:cursor-grab md:active:cursor-grabbing select-none"
+            className="bg-gradient-to-r from-slate-800 to-slate-700 px-3 py-2.5 flex items-center justify-between md:cursor-grab md:active:cursor-grabbing select-none"
             onMouseDown={handleMouseDown}
           >
-            <div className="flex items-center gap-2">
-              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-6 md:h-6" />
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-5 md:h-6 max-w-[140px] md:max-w-none object-contain" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <div className="relative" ref={languageMenuRef}>
                 <button
                   onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                  className="text-white hover:text-gray-300 transition-colors p-2 md:p-1 rounded hover:bg-slate-600"
+                  className="text-white hover:text-gray-300 transition-colors p-1.5 rounded hover:bg-slate-600"
                   title="Change Language"
                 >
-                  <Globe size={20} className="md:w-[18px] md:h-[18px]" />
+                  <Globe size={18} className="w-[18px] h-[18px]" />
                 </button>
                 {showLanguageMenu && (
                   <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl overflow-hidden z-50">
@@ -621,9 +661,9 @@ function App() {
               </div>
               <button
                 onClick={handleClose}
-                className="text-white hover:text-gray-300 transition-colors p-2 md:p-0"
+                className="text-white hover:text-gray-300 transition-colors p-1.5"
               >
-                <X size={20} className="md:w-[18px] md:h-[18px]" />
+                <X size={18} className="w-[18px] h-[18px]" />
               </button>
             </div>
           </div>
@@ -637,13 +677,13 @@ function App() {
               >
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 md:w-6 md:h-6 bg-slate-800 rounded-full flex items-center justify-center">
-                      <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5 md:w-4 md:h-4" />
+                    <div className="w-7 h-7 bg-slate-800 rounded-full flex items-center justify-center">
+                      <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-4 h-4" />
                     </div>
                   </div>
                 )}
                 <div
-                  className={`max-w-[85%] md:max-w-sm px-4 py-2.5 md:px-3 md:py-2 rounded-2xl relative ${
+                  className={`max-w-[85%] md:max-w-[75%] px-3 py-2 rounded-2xl relative ${
                     message.role === 'user'
                       ? 'bg-green-700 text-white'
                       : 'bg-white text-gray-800 shadow-sm border border-gray-200'
@@ -653,7 +693,7 @@ function App() {
                     borderBottomLeftRadius: message.role === 'assistant' ? '4px' : undefined,
                   }}
                 >
-                  <p className="text-sm md:text-xs whitespace-pre-wrap leading-relaxed">
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">
                     {message.content}
                   </p>
                   {message.fileUrl && message.fileName && (
@@ -671,13 +711,13 @@ function App() {
               </div>
             ))}
             {messages.length > 0 && messages[messages.length - 1].options && (
-              <div className="flex flex-col gap-2 ml-10">
+              <div className="flex flex-col gap-2 ml-8">
                 {messages[messages.length - 1].options!.map((option) => (
                   <button
                     key={option.id}
                     onClick={() => handleOptionClick(option)}
                     disabled={loading}
-                    className="bg-white border-2 border-slate-800 text-slate-800 px-4 py-2.5 rounded-2xl text-sm md:text-xs text-left hover:bg-slate-800 hover:text-white transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-white border-2 border-slate-800 text-slate-800 px-3 py-2 rounded-2xl text-sm text-left hover:bg-slate-800 hover:text-white transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed break-words"
                   >
                     {option.label}
                   </button>
@@ -687,8 +727,8 @@ function App() {
             {loading && (
               <div className="flex gap-2 justify-start">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 md:w-6 md:h-6 bg-slate-800 rounded-full flex items-center justify-center">
-                    <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-5 h-5 md:w-4 md:h-4" />
+                  <div className="w-7 h-7 bg-slate-800 rounded-full flex items-center justify-center">
+                    <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-4 h-4" />
                   </div>
                 </div>
                 <div className="bg-white px-3 py-2 rounded-2xl shadow-sm border border-gray-200 relative" style={{ borderBottomLeftRadius: '4px' }}>
@@ -704,15 +744,17 @@ function App() {
           </div>
 
           {/* Category Navigation Bar */}
-          <div className="bg-white border-t border-gray-200 px-4 md:px-3 py-2">
-            <div className="flex gap-2 flex-wrap justify-center">
+          <div className="bg-white border-t border-gray-200 px-3 py-2 overflow-x-auto scrollbar-thin">
+            <div className="flex gap-2 min-w-max">
               {ASSISTANCE_CATEGORIES.map((category) => (
                 <button
                   key={category.id}
                   onClick={async () => {
                     if (loading) return;
                     setSelectedCategory(category.id);
-                    const categoryQuery = `Tell me about ${category.label.toLowerCase()} programs`;
+                    const t = translations[language];
+                    const categoryLabel = t.categories[category.id as keyof typeof t.categories];
+                    const categoryQuery = `Tell me about ${categoryLabel.toLowerCase()} programs`;
 
                     const userMsg: Message = {
                       id: Date.now().toString(),
@@ -759,21 +801,21 @@ function App() {
                     }
                   }}
                   disabled={loading}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                     selectedCategory === category.id
                       ? 'bg-slate-800 text-white shadow-sm'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
                   }`}
                 >
-                  <span>{category.icon}</span>
-                  <span>{category.label}</span>
+                  <span className="text-base">{category.icon}</span>
+                  <span>{translations[language].categories[category.id as keyof typeof translations[typeof language]['categories']]}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Input Area */}
-          <div className="p-4 md:p-3 bg-white border-t border-gray-200">
+          <div className="p-3 bg-white border-t border-gray-200">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -792,30 +834,31 @@ function App() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading || uploadingFile}
-                className="text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors p-2 rounded-full hover:bg-blue-50"
+                className="text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors p-1.5 rounded-full hover:bg-blue-50 flex-shrink-0"
                 title={translations[language].uploadFile}
               >
                 {uploadingFile ? (
                   <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <Upload size={20} className="md:w-[18px] md:h-[18px]" />
+                  <Upload size={18} className="w-[18px] h-[18px]" />
                 )}
               </button>
-              <div className="flex-1 relative">
+              <div className="flex-1 relative min-w-0">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={translations[language].placeholder}
                   disabled={loading}
-                  className="w-full px-4 py-3 md:px-3 md:py-2 pr-14 rounded-full border border-gray-300 focus:outline-none focus:border-blue-500 disabled:bg-gray-100 text-base md:text-xs"
+                  className="w-full px-3 py-2 pr-10 rounded-full border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 text-sm"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   <button
-                    type="button"
-                    className="text-gray-400 hover:text-gray-600"
+                    type="submit"
+                    disabled={loading || !input.trim()}
+                    className="text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors"
                   >
-                    <Smile size={20} className="md:w-[18px] md:h-[18px]" />
+                    <Send size={18} className="w-[18px] h-[18px]" />
                   </button>
                 </div>
               </div>
