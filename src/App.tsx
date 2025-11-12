@@ -788,10 +788,10 @@ function App() {
       {!isOpen && (
         <button
           onClick={handleOpen}
-          className="fixed bottom-4 right-4 w-14 h-14 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors animate-slide-up"
+          className="fixed bottom-4 right-4 w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors animate-slide-up z-50"
           title="Open chat"
         >
-          <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Chat" className="w-7 h-7" />
+          <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Chat" className="w-6 h-6 sm:w-7 sm:h-7" />
         </button>
       )}
       {isOpen && (
@@ -812,7 +812,7 @@ function App() {
             onMouseDown={handleMouseDown}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-5 md:h-6 max-w-[140px] md:max-w-none object-contain" />
+              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-4 sm:h-5 md:h-6 max-w-[120px] sm:max-w-[140px] md:max-w-none object-contain" />
             </div>
             <div className="flex items-center gap-1">
               <div className="relative" ref={languageMenuRef}>
