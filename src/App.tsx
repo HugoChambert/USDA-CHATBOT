@@ -55,12 +55,66 @@ interface FAQ {
 }
 
 const CATEGORY_KEYWORDS = {
-  housing: ['housing', 'home', 'house', 'mortgage', 'rent', 'rental', 'apartment', 'residence', 'dwelling', 'homeowner', 'buyer', 'purchase', 'repair', 'rehabilitation', 'multifamily', 'mobile home', 'manufactured home'],
-  business: ['business', 'entrepreneur', 'small business', 'company', 'enterprise', 'startup', 'cooperative', 'coop', 'industry', 'manufacturing', 'retail', 'commercial', 'venture', 'microenterprise', 'value added', 'producer', 'agriculture business', 'farm business'],
-  broadband: ['broadband', 'internet', 'connectivity', 'telecommunications', 'telecom', 'fiber', 'wireless', 'network', 'bandwidth', 'digital', 'online', 'web', 'wifi', 'cell tower', 'cellular', 'reconnect', 'community connect'],
-  energy: ['energy', 'renewable', 'solar', 'wind', 'geothermal', 'biomass', 'hydropower', 'efficiency', 'electric', 'electricity', 'power', 'reap', 'conservation', 'sustainable', 'green energy', 'clean energy'],
-  water: ['water', 'wastewater', 'sewer', 'sewage', 'waste disposal', 'sanitation', 'stormwater', 'drainage', 'treatment', 'drinking water', 'well', 'aquifer', 'pipeline', 'infrastructure'],
-  community: ['community', 'facilities', 'facility', 'health', 'healthcare', 'hospital', 'clinic', 'fire station', 'police', 'library', 'school', 'education', 'childcare', 'daycare', 'senior center', 'recreation', 'public safety', 'emergency services', 'telemedicine']
+  housing: [
+    // English
+    'housing', 'home', 'house', 'mortgage', 'rent', 'rental', 'apartment', 'residence', 'dwelling', 'homeowner', 'buyer', 'purchase', 'repair', 'rehabilitation', 'multifamily', 'mobile home', 'manufactured home',
+    // Spanish
+    'vivienda', 'casa', 'hogar', 'hipoteca', 'alquiler', 'apartamento', 'residencia', 'propietario', 'comprador', 'compra', 'reparación', 'rehabilitación', 'multifamiliar',
+    // Chinese
+    '住房', '房屋', '家', '抵押', '租金', '公寓', '居住', '房主', '买家', '购买', '维修', '改造', '多户',
+    // Vietnamese
+    'nhà ở', 'nhà', 'thế chấp', 'thuê', 'căn hộ', 'cư trú', 'chủ nhà', 'người mua', 'mua', 'sửa chữa', 'cải tạo'
+  ],
+  business: [
+    // English
+    'business', 'entrepreneur', 'small business', 'company', 'enterprise', 'startup', 'cooperative', 'coop', 'industry', 'manufacturing', 'retail', 'commercial', 'venture', 'microenterprise', 'value added', 'producer', 'agriculture business', 'farm business', 'loan', 'grant', 'financing',
+    // Spanish
+    'negocio', 'negocios', 'empresa', 'empresario', 'pequeña empresa', 'compañía', 'cooperativa', 'industria', 'fabricación', 'comercial', 'microempresa', 'productor', 'préstamo', 'subvención', 'financiamiento',
+    // Chinese
+    '商业', '企业', '公司', '创业', '小企业', '合作社', '工业', '制造', '零售', '商业', '生产者', '贷款', '补助', '融资',
+    // Vietnamese
+    'kinh doanh', 'doanh nghiệp', 'công ty', 'khởi nghiệp', 'hợp tác xã', 'công nghiệp', 'sản xuất', 'thương mại', 'nhà sản xuất', 'vay', 'trợ cấp', 'tài chính'
+  ],
+  broadband: [
+    // English
+    'broadband', 'internet', 'connectivity', 'telecommunications', 'telecom', 'fiber', 'wireless', 'network', 'bandwidth', 'digital', 'online', 'web', 'wifi', 'cell tower', 'cellular', 'reconnect', 'community connect',
+    // Spanish
+    'banda ancha', 'internet', 'conectividad', 'telecomunicaciones', 'fibra', 'inalámbrico', 'red', 'digital', 'wifi',
+    // Chinese
+    '宽带', '互联网', '连接', '电信', '光纤', '无线', '网络', '数字', 'wifi',
+    // Vietnamese
+    'băng thông rộng', 'internet', 'kết nối', 'viễn thông', 'cáp quang', 'không dây', 'mạng', 'kỹ thuật số', 'wifi'
+  ],
+  energy: [
+    // English
+    'energy', 'renewable', 'solar', 'wind', 'geothermal', 'biomass', 'hydropower', 'efficiency', 'electric', 'electricity', 'power', 'reap', 'conservation', 'sustainable', 'green energy', 'clean energy',
+    // Spanish
+    'energía', 'renovable', 'solar', 'viento', 'eólica', 'geotérmica', 'biomasa', 'hidroeléctrica', 'eficiencia', 'eléctrica', 'electricidad', 'sostenible', 'energía limpia',
+    // Chinese
+    '能源', '可再生', '太阳能', '风能', '地热', '生物质', '水电', '效率', '电力', '可持续', '清洁能源',
+    // Vietnamese
+    'năng lượng', 'tái tạo', 'mặt trời', 'gió', 'địa nhiệt', 'sinh khối', 'thủy điện', 'hiệu quả', 'điện', 'bền vững', 'năng lượng sạch'
+  ],
+  water: [
+    // English
+    'water', 'wastewater', 'sewer', 'sewage', 'waste disposal', 'sanitation', 'stormwater', 'drainage', 'treatment', 'drinking water', 'well', 'aquifer', 'pipeline', 'infrastructure',
+    // Spanish
+    'agua', 'aguas residuales', 'alcantarillado', 'eliminación de desechos', 'saneamiento', 'drenaje', 'tratamiento', 'agua potable', 'pozo', 'tubería', 'infraestructura',
+    // Chinese
+    '水', '废水', '污水', '下水道', '废物处理', '卫生', '排水', '处理', '饮用水', '井', '管道', '基础设施',
+    // Vietnamese
+    'nước', 'nước thải', 'cống', 'xử lý chất thải', 'vệ sinh', 'thoát nước', 'xử lý', 'nước uống', 'giếng', 'đường ống', 'cơ sở hạ tầng'
+  ],
+  community: [
+    // English
+    'community', 'facilities', 'facility', 'health', 'healthcare', 'hospital', 'clinic', 'fire station', 'police', 'library', 'school', 'education', 'childcare', 'daycare', 'senior center', 'recreation', 'public safety', 'emergency services', 'telemedicine',
+    // Spanish
+    'comunidad', 'instalaciones', 'salud', 'hospital', 'clínica', 'estación de bomberos', 'policía', 'biblioteca', 'escuela', 'educación', 'guardería', 'centro de ancianos', 'recreación', 'seguridad pública', 'telemedicina',
+    // Chinese
+    '社区', '设施', '卫生', '医疗', '医院', '诊所', '消防站', '警察', '图书馆', '学校', '教育', '托儿所', '老年中心', '娱乐', '公共安全', '远程医疗',
+    // Vietnamese
+    'cộng đồng', 'cơ sở vật chất', 'y tế', 'chăm sóc sức khỏe', 'bệnh viện', 'phòng khám', 'trạm cứu hỏa', 'cảnh sát', 'thư viện', 'trường học', 'giáo dục', 'trung tâm chăm sóc trẻ em', 'trung tâm người cao tuổi', 'giải trí', 'an toàn công cộng', 'y học từ xa'
+  ]
 };
 
 const ALL_KEYWORDS = Object.values(CATEGORY_KEYWORDS).flat();
