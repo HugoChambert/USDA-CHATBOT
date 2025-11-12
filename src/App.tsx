@@ -36,6 +36,12 @@ interface Program {
   eligibility?: string | null;
   benefits?: string | null;
   application_process?: string | null;
+  title_es?: string | null;
+  title_zh?: string | null;
+  title_vi?: string | null;
+  description_es?: string | null;
+  description_zh?: string | null;
+  description_vi?: string | null;
 }
 
 interface Document {
@@ -52,6 +58,12 @@ interface FAQ {
   question: string;
   answer: string;
   category: string | null;
+  question_es?: string | null;
+  question_zh?: string | null;
+  question_vi?: string | null;
+  answer_es?: string | null;
+  answer_zh?: string | null;
+  answer_vi?: string | null;
 }
 
 const CATEGORY_KEYWORDS = {
@@ -260,9 +272,14 @@ function App() {
       // Detect primary category from user query
       const detectedCategory = detectCategory(userQuery);
 
+      // Select appropriate language columns
+      const titleCol = language === 'es' ? 'title_es' : language === 'zh' ? 'title_zh' : language === 'vi' ? 'title_vi' : null;
+      const descCol = language === 'es' ? 'description_es' : language === 'zh' ? 'description_zh' : language === 'vi' ? 'description_vi' : null;
+
       let query = supabase
         .from('programs')
-        .select('id, title, description, url, category, eligibility, benefits, application_process');
+        .select(`id, title, description, url, category, eligibility, benefits, application_process,
+                 ${titleCol ? `${titleCol},` : ''} ${descCol ? `${descCol}` : ''}`);
 
       // If we detected a specific category, filter by it first
       if (detectedCategory) {
@@ -281,9 +298,16 @@ function App() {
         return [];
       }
 
-      // Score and sort results by relevance
+      // Score and sort results by relevance, use translated fields if available
       const scored = (data || []).map(program => {
         let score = 0;
+        const displayTitle = (language === 'es' && program.title_es) ? program.title_es :
+                            (language === 'zh' && program.title_zh) ? program.title_zh :
+                            (language === 'vi' && program.title_vi) ? program.title_vi : program.title;
+        const displayDesc = (language === 'es' && program.description_es) ? program.description_es :
+                           (language === 'zh' && program.description_zh) ? program.description_zh :
+                           (language === 'vi' && program.description_vi) ? program.description_vi : program.description;
+
         const searchText = `${program.title} ${program.description} ${program.category}`.toLowerCase();
         keywords.forEach(keyword => {
           const lowerKeyword = keyword.toLowerCase();
@@ -293,7 +317,14 @@ function App() {
           if (program.title?.toLowerCase().includes(lowerKeyword)) score += 5;
           if (program.description?.toLowerCase().includes(lowerKeyword)) score += 2;
         });
-        return { ...program, score };
+
+        // Return program with translated fields
+        return {
+          ...program,
+          title: displayTitle,
+          description: displayDesc,
+          score
+        };
       });
 
       return scored.filter(p => p.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
@@ -353,9 +384,14 @@ function App() {
     try {
       const detectedCategory = detectCategory(userQuery);
 
+      // Select appropriate language columns
+      const questionCol = language === 'es' ? 'question_es' : language === 'zh' ? 'question_zh' : language === 'vi' ? 'question_vi' : null;
+      const answerCol = language === 'es' ? 'answer_es' : language === 'zh' ? 'answer_zh' : language === 'vi' ? 'answer_vi' : null;
+
       let query = supabase
         .from('faqs')
-        .select('id, question, answer, category');
+        .select(`id, question, answer, category,
+                 ${questionCol ? `${questionCol},` : ''} ${answerCol ? `${answerCol}` : ''}`);
 
       if (detectedCategory) {
         query = query.eq('category', detectedCategory);
@@ -372,9 +408,16 @@ function App() {
         return [];
       }
 
-      // Score by relevance
+      // Score by relevance, use translated fields if available
       const scored = (data || []).map(faq => {
         let score = 0;
+        const displayQuestion = (language === 'es' && faq.question_es) ? faq.question_es :
+                               (language === 'zh' && faq.question_zh) ? faq.question_zh :
+                               (language === 'vi' && faq.question_vi) ? faq.question_vi : faq.question;
+        const displayAnswer = (language === 'es' && faq.answer_es) ? faq.answer_es :
+                             (language === 'zh' && faq.answer_zh) ? faq.answer_zh :
+                             (language === 'vi' && faq.answer_vi) ? faq.answer_vi : faq.answer;
+
         keywords.forEach(keyword => {
           const lowerKeyword = keyword.toLowerCase();
           if (detectedCategory && faq.category === detectedCategory) score += 20;
@@ -382,7 +425,13 @@ function App() {
           if (faq.question?.toLowerCase().includes(lowerKeyword)) score += 5;
           if (faq.answer?.toLowerCase().includes(lowerKeyword)) score += 2;
         });
-        return { ...faq, score };
+
+        return {
+          ...faq,
+          question: displayQuestion,
+          answer: displayAnswer,
+          score
+        };
       });
 
       return scored.filter(f => f.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
