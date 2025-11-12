@@ -628,75 +628,6 @@ function App() {
             </div>
           </div>
 
-          {/* Category Navigation Bar */}
-          <div className="bg-white border-b border-gray-200 px-3 py-2 overflow-x-auto">
-            <div className="flex gap-2 min-w-max">
-              {ASSISTANCE_CATEGORIES.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={async () => {
-                    if (loading) return;
-                    setSelectedCategory(category.id);
-                    const categoryQuery = `Tell me about ${category.label.toLowerCase()} programs`;
-
-                    const userMsg: Message = {
-                      id: Date.now().toString(),
-                      role: 'user',
-                      content: categoryQuery,
-                      timestamp: new Date(),
-                    };
-
-                    setMessages((prev) => [...prev, userMsg]);
-                    setLoading(true);
-
-                    try {
-                      const keywords = extractKeywords(categoryQuery);
-                      const [programs, documents, faqs] = await Promise.all([
-                        searchPrograms(keywords),
-                        searchDocuments(keywords),
-                        searchFAQs(keywords)
-                      ]);
-                      const { content: responseContent, options } = generateConversationalResponse(categoryQuery, keywords, programs, documents, faqs);
-
-                      const thinkingDelay = 800 + Math.random() * 700;
-                      await new Promise(resolve => setTimeout(resolve, thinkingDelay));
-
-                      const assistantMsg: Message = {
-                        id: (Date.now() + 1).toString(),
-                        role: 'assistant',
-                        content: responseContent,
-                        timestamp: new Date(),
-                        options,
-                      };
-
-                      setMessages((prev) => [...prev, assistantMsg]);
-                    } catch (error) {
-                      console.error('Error:', error);
-                      const errorMsg: Message = {
-                        id: (Date.now() + 1).toString(),
-                        role: 'assistant',
-                        content: translations[language].errorMessage,
-                        timestamp: new Date(),
-                      };
-                      setMessages((prev) => [...prev, errorMsg]);
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  disabled={loading}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                    selectedCategory === category.id
-                      ? 'bg-slate-800 text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
-                  }`}
-                >
-                  <span>{category.icon}</span>
-                  <span>{category.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-4 md:p-3 space-y-4 md:space-y-3 bg-gray-50">
             {messages.map((message) => (
@@ -770,6 +701,75 @@ function App() {
               </div>
             )}
             <div ref={messagesEndRef} />
+          </div>
+
+          {/* Category Navigation Bar */}
+          <div className="bg-white border-t border-gray-200 px-4 md:px-3 py-2">
+            <div className="flex gap-2 flex-wrap justify-center">
+              {ASSISTANCE_CATEGORIES.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={async () => {
+                    if (loading) return;
+                    setSelectedCategory(category.id);
+                    const categoryQuery = `Tell me about ${category.label.toLowerCase()} programs`;
+
+                    const userMsg: Message = {
+                      id: Date.now().toString(),
+                      role: 'user',
+                      content: categoryQuery,
+                      timestamp: new Date(),
+                    };
+
+                    setMessages((prev) => [...prev, userMsg]);
+                    setLoading(true);
+
+                    try {
+                      const keywords = extractKeywords(categoryQuery);
+                      const [programs, documents, faqs] = await Promise.all([
+                        searchPrograms(keywords),
+                        searchDocuments(keywords),
+                        searchFAQs(keywords)
+                      ]);
+                      const { content: responseContent, options } = generateConversationalResponse(categoryQuery, keywords, programs, documents, faqs);
+
+                      const thinkingDelay = 800 + Math.random() * 700;
+                      await new Promise(resolve => setTimeout(resolve, thinkingDelay));
+
+                      const assistantMsg: Message = {
+                        id: (Date.now() + 1).toString(),
+                        role: 'assistant',
+                        content: responseContent,
+                        timestamp: new Date(),
+                        options,
+                      };
+
+                      setMessages((prev) => [...prev, assistantMsg]);
+                    } catch (error) {
+                      console.error('Error:', error);
+                      const errorMsg: Message = {
+                        id: (Date.now() + 1).toString(),
+                        role: 'assistant',
+                        content: translations[language].errorMessage,
+                        timestamp: new Date(),
+                      };
+                      setMessages((prev) => [...prev, errorMsg]);
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedCategory === category.id
+                      ? 'bg-slate-800 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
+                >
+                  <span>{category.icon}</span>
+                  <span>{category.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Input Area */}
