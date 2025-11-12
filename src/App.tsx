@@ -276,10 +276,14 @@ function App() {
       const titleCol = language === 'es' ? 'title_es' : language === 'zh' ? 'title_zh' : language === 'vi' ? 'title_vi' : null;
       const descCol = language === 'es' ? 'description_es' : language === 'zh' ? 'description_zh' : language === 'vi' ? 'description_vi' : null;
 
+      const extraCols = [titleCol, descCol].filter(Boolean).join(', ');
+      const selectStr = extraCols
+        ? `id, title, description, url, category, eligibility, benefits, application_process, ${extraCols}`
+        : `id, title, description, url, category, eligibility, benefits, application_process`;
+
       let query = supabase
         .from('programs')
-        .select(`id, title, description, url, category, eligibility, benefits, application_process,
-                 ${titleCol ? `${titleCol},` : ''} ${descCol ? `${descCol}` : ''}`);
+        .select(selectStr);
 
       // If we detected a specific category, filter by it first
       if (detectedCategory) {
@@ -397,10 +401,14 @@ function App() {
       const questionCol = language === 'es' ? 'question_es' : language === 'zh' ? 'question_zh' : language === 'vi' ? 'question_vi' : null;
       const answerCol = language === 'es' ? 'answer_es' : language === 'zh' ? 'answer_zh' : language === 'vi' ? 'answer_vi' : null;
 
+      const extraCols = [questionCol, answerCol].filter(Boolean).join(', ');
+      const selectStr = extraCols
+        ? `id, question, answer, category, ${extraCols}`
+        : `id, question, answer, category`;
+
       let query = supabase
         .from('faqs')
-        .select(`id, question, answer, category,
-                 ${questionCol ? `${questionCol},` : ''} ${answerCol ? `${answerCol}` : ''}`);
+        .select(selectStr);
 
       if (detectedCategory) {
         query = query.eq('category', detectedCategory);
