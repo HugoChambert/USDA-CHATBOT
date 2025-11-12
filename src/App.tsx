@@ -286,10 +286,19 @@ function App() {
         query = query.eq('category', detectedCategory);
       }
 
-      // Build OR conditions for each keyword
-      const conditions = keywords.map(keyword =>
-        `title.ilike.%${keyword}%,description.ilike.%${keyword}%,eligibility.ilike.%${keyword}%,benefits.ilike.%${keyword}%`
-      ).join(',');
+      // Build OR conditions for each keyword - search both English and translated fields
+      const conditions = keywords.map(keyword => {
+        const baseConditions = `title.ilike.%${keyword}%,description.ilike.%${keyword}%,eligibility.ilike.%${keyword}%,benefits.ilike.%${keyword}%`;
+        // Also search translated fields if language is not English
+        if (language === 'es') {
+          return `${baseConditions},title_es.ilike.%${keyword}%,description_es.ilike.%${keyword}%`;
+        } else if (language === 'zh') {
+          return `${baseConditions},title_zh.ilike.%${keyword}%,description_zh.ilike.%${keyword}%`;
+        } else if (language === 'vi') {
+          return `${baseConditions},title_vi.ilike.%${keyword}%,description_vi.ilike.%${keyword}%`;
+        }
+        return baseConditions;
+      }).join(',');
 
       const { data, error } = await query.or(conditions).limit(10);
 
@@ -397,9 +406,19 @@ function App() {
         query = query.eq('category', detectedCategory);
       }
 
-      const conditions = keywords.map(keyword =>
-        `question.ilike.%${keyword}%,answer.ilike.%${keyword}%`
-      ).join(',');
+      // Build OR conditions for each keyword - search both English and translated fields
+      const conditions = keywords.map(keyword => {
+        const baseConditions = `question.ilike.%${keyword}%,answer.ilike.%${keyword}%`;
+        // Also search translated fields if language is not English
+        if (language === 'es') {
+          return `${baseConditions},question_es.ilike.%${keyword}%,answer_es.ilike.%${keyword}%`;
+        } else if (language === 'zh') {
+          return `${baseConditions},question_zh.ilike.%${keyword}%,answer_zh.ilike.%${keyword}%`;
+        } else if (language === 'vi') {
+          return `${baseConditions},question_vi.ilike.%${keyword}%,answer_vi.ilike.%${keyword}%`;
+        }
+        return baseConditions;
+      }).join(',');
 
       const { data, error } = await query.or(conditions).limit(5);
 
