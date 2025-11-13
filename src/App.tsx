@@ -257,7 +257,19 @@ function App() {
     if (maxScore === 0) return null;
 
     const topCategory = Object.entries(categoryScores).find(([_, score]) => score === maxScore);
-    return topCategory ? topCategory[0] : null;
+    if (!topCategory) return null;
+
+    // Map frontend categories to database categories
+    const categoryMap: Record<string, string> = {
+      'housing': 'Housing',
+      'business': 'Business',
+      'broadband': 'Utilities',
+      'energy': 'Energy',
+      'water': 'Utilities',
+      'community': 'Community Facilities'
+    };
+
+    return categoryMap[topCategory[0]] || null;
   };
 
   const isOnTopic = (text: string): boolean => {
@@ -266,7 +278,7 @@ function App() {
   };
 
   const searchPrograms = async (keywords: string[], userQuery: string): Promise<Program[]> => {
-    if (keywords.length === 0 || !supabase) return [];
+    if (!supabase) return [];
 
     try {
       // Detect primary category from user query
@@ -290,21 +302,25 @@ function App() {
         query = query.eq('category', detectedCategory);
       }
 
-      // Build OR conditions for each keyword - search both English and translated fields
-      const conditions = keywords.map(keyword => {
-        const baseConditions = `title.ilike.%${keyword}%,description.ilike.%${keyword}%,eligibility.ilike.%${keyword}%,benefits.ilike.%${keyword}%`;
-        // Also search translated fields if language is not English
-        if (language === 'es') {
-          return `${baseConditions},title_es.ilike.%${keyword}%,description_es.ilike.%${keyword}%`;
-        } else if (language === 'zh') {
-          return `${baseConditions},title_zh.ilike.%${keyword}%,description_zh.ilike.%${keyword}%`;
-        } else if (language === 'vi') {
-          return `${baseConditions},title_vi.ilike.%${keyword}%,description_vi.ilike.%${keyword}%`;
-        }
-        return baseConditions;
-      }).join(',');
+      // If we have keywords, build search conditions
+      if (keywords.length > 0) {
+        const conditions = keywords.map(keyword => {
+          const baseConditions = `title.ilike.%${keyword}%,description.ilike.%${keyword}%,eligibility.ilike.%${keyword}%,benefits.ilike.%${keyword}%,application_process.ilike.%${keyword}%`;
+          // Also search translated fields if language is not English
+          if (language === 'es') {
+            return `${baseConditions},title_es.ilike.%${keyword}%,description_es.ilike.%${keyword}%`;
+          } else if (language === 'zh') {
+            return `${baseConditions},title_zh.ilike.%${keyword}%,description_zh.ilike.%${keyword}%`;
+          } else if (language === 'vi') {
+            return `${baseConditions},title_vi.ilike.%${keyword}%,description_vi.ilike.%${keyword}%`;
+          }
+          return baseConditions;
+        }).join(',');
 
-      const { data, error } = await query.or(conditions).limit(10);
+        query = query.or(conditions);
+      }
+
+      const { data, error } = await query.limit(20);
 
       if (error) {
         console.error('Search error:', error);
@@ -321,15 +337,24 @@ function App() {
                            (language === 'zh' && program.description_zh) ? program.description_zh :
                            (language === 'vi' && program.description_vi) ? program.description_vi : program.description;
 
-        const searchText = `${program.title} ${program.description} ${program.category}`.toLowerCase();
+        const searchText = `${program.title} ${program.description} ${program.category} ${program.eligibility} ${program.benefits}`.toLowerCase();
+
+        // Boost score if program category matches detected category
+        if (detectedCategory && program.category === detectedCategory) score += 30;
+
+        // Score based on keyword matches
         keywords.forEach(keyword => {
           const lowerKeyword = keyword.toLowerCase();
-          // Boost score if program category matches detected category
-          if (detectedCategory && program.category === detectedCategory) score += 20;
-          if (program.category?.toLowerCase().includes(lowerKeyword)) score += 10;
-          if (program.title?.toLowerCase().includes(lowerKeyword)) score += 5;
-          if (program.description?.toLowerCase().includes(lowerKeyword)) score += 2;
+          if (program.title?.toLowerCase().includes(lowerKeyword)) score += 10;
+          if (program.description?.toLowerCase().includes(lowerKeyword)) score += 5;
+          if (program.eligibility?.toLowerCase().includes(lowerKeyword)) score += 3;
+          if (program.benefits?.toLowerCase().includes(lowerKeyword)) score += 3;
         });
+
+        // If no keywords but we have a category match, give base score
+        if (keywords.length === 0 && detectedCategory && program.category === detectedCategory) {
+          score = 10;
+        }
 
         // Return program with translated fields
         return {
@@ -348,7 +373,7 @@ function App() {
   };
 
   const searchDocuments = async (keywords: string[], userQuery: string): Promise<Document[]> => {
-    if (keywords.length === 0 || !supabase) return [];
+    if (!supabase) return [];
 
     try {
       const detectedCategory = detectCategory(userQuery);
@@ -361,11 +386,14 @@ function App() {
         query = query.eq('category', detectedCategory);
       }
 
-      const conditions = keywords.map(keyword =>
-        `title.ilike.%${keyword}%,description.ilike.%${keyword}%`
-      ).join(',');
+      if (keywords.length > 0) {
+        const conditions = keywords.map(keyword =>
+          `title.ilike.%${keyword}%,description.ilike.%${keyword}%,document_type.ilike.%${keyword}%`
+        ).join(',');
+        query = query.or(conditions);
+      }
 
-      const { data, error } = await query.or(conditions).limit(5);
+      const { data, error } = await query.limit(10);
 
       if (error) {
         console.error('Document search error:', error);
@@ -375,12 +403,17 @@ function App() {
       // Score by relevance
       const scored = (data || []).map(doc => {
         let score = 0;
+        if (detectedCategory && doc.category === detectedCategory) score += 20;
         keywords.forEach(keyword => {
           const lowerKeyword = keyword.toLowerCase();
-          if (detectedCategory && doc.category === detectedCategory) score += 20;
-          if (doc.category?.toLowerCase().includes(lowerKeyword)) score += 10;
-          if (doc.title?.toLowerCase().includes(lowerKeyword)) score += 5;
+          if (doc.title?.toLowerCase().includes(lowerKeyword)) score += 10;
+          if (doc.description?.toLowerCase().includes(lowerKeyword)) score += 5;
+          if (doc.document_type?.toLowerCase().includes(lowerKeyword)) score += 3;
         });
+        // If no keywords but we have a category match, give base score
+        if (keywords.length === 0 && detectedCategory && doc.category === detectedCategory) {
+          score = 5;
+        }
         return { ...doc, score };
       });
 
@@ -392,7 +425,7 @@ function App() {
   };
 
   const searchFAQs = async (keywords: string[], userQuery: string): Promise<FAQ[]> => {
-    if (keywords.length === 0 || !supabase) return [];
+    if (!supabase) return [];
 
     try {
       const detectedCategory = detectCategory(userQuery);
@@ -415,20 +448,24 @@ function App() {
       }
 
       // Build OR conditions for each keyword - search both English and translated fields
-      const conditions = keywords.map(keyword => {
-        const baseConditions = `question.ilike.%${keyword}%,answer.ilike.%${keyword}%`;
-        // Also search translated fields if language is not English
-        if (language === 'es') {
-          return `${baseConditions},question_es.ilike.%${keyword}%,answer_es.ilike.%${keyword}%`;
-        } else if (language === 'zh') {
-          return `${baseConditions},question_zh.ilike.%${keyword}%,answer_zh.ilike.%${keyword}%`;
-        } else if (language === 'vi') {
-          return `${baseConditions},question_vi.ilike.%${keyword}%,answer_vi.ilike.%${keyword}%`;
-        }
-        return baseConditions;
-      }).join(',');
+      if (keywords.length > 0) {
+        const conditions = keywords.map(keyword => {
+          const baseConditions = `question.ilike.%${keyword}%,answer.ilike.%${keyword}%`;
+          // Also search translated fields if language is not English
+          if (language === 'es') {
+            return `${baseConditions},question_es.ilike.%${keyword}%,answer_es.ilike.%${keyword}%`;
+          } else if (language === 'zh') {
+            return `${baseConditions},question_zh.ilike.%${keyword}%,answer_zh.ilike.%${keyword}%`;
+          } else if (language === 'vi') {
+            return `${baseConditions},question_vi.ilike.%${keyword}%,answer_vi.ilike.%${keyword}%`;
+          }
+          return baseConditions;
+        }).join(',');
 
-      const { data, error } = await query.or(conditions).limit(5);
+        query = query.or(conditions);
+      }
+
+      const { data, error } = await query.limit(10);
 
       if (error) {
         console.error('FAQ search error:', error);
@@ -445,13 +482,18 @@ function App() {
                              (language === 'zh' && faq.answer_zh) ? faq.answer_zh :
                              (language === 'vi' && faq.answer_vi) ? faq.answer_vi : faq.answer;
 
+        if (detectedCategory && faq.category === detectedCategory) score += 20;
+
         keywords.forEach(keyword => {
           const lowerKeyword = keyword.toLowerCase();
-          if (detectedCategory && faq.category === detectedCategory) score += 20;
-          if (faq.category?.toLowerCase().includes(lowerKeyword)) score += 10;
-          if (faq.question?.toLowerCase().includes(lowerKeyword)) score += 5;
-          if (faq.answer?.toLowerCase().includes(lowerKeyword)) score += 2;
+          if (faq.question?.toLowerCase().includes(lowerKeyword)) score += 10;
+          if (faq.answer?.toLowerCase().includes(lowerKeyword)) score += 3;
         });
+
+        // If no keywords but we have a category match, give base score
+        if (keywords.length === 0 && detectedCategory && faq.category === detectedCategory) {
+          score = 5;
+        }
 
         return {
           ...faq,
