@@ -518,6 +518,44 @@ function App() {
     faqs: FAQ[]
   ): { content: string; options?: MessageOption[] } => {
     const t = translations[language];
+    const lowerQuery = query.toLowerCase();
+
+    // Check for help/application questions
+    const helpKeywords = ['help', 'how do i', 'how to', 'can you help', 'need help', 'assist', 'guidance',
+                          'ayuda', 'cómo', 'ayudar', 'necesito',
+                          '帮助', '如何', '怎么',
+                          'giúp', 'làm thế nào', 'cần'];
+    const applicationKeywords = ['apply', 'application', 'applying', 'start', 'begin', 'process',
+                                 'solicitud', 'aplicar', 'comenzar', 'proceso',
+                                 '申请', '开始', '过程',
+                                 'đăng ký', 'nộp đơn', 'bắt đầu'];
+    const documentKeywords = ['document', 'form', 'paperwork', 'need', 'required', 'documents',
+                              'documento', 'formulario', 'necesito',
+                              '文件', '表格', '需要',
+                              'tài liệu', 'mẫu đơn'];
+
+    const isHelpQuestion = helpKeywords.some(kw => lowerQuery.includes(kw));
+    const isApplicationQuestion = applicationKeywords.some(kw => lowerQuery.includes(kw));
+    const isDocumentQuestion = documentKeywords.some(kw => lowerQuery.includes(kw));
+
+    // If asking for help with application/documents, provide proactive guidance
+    if ((isHelpQuestion || isApplicationQuestion || isDocumentQuestion) && (programs.length > 0 || faqs.length > 0)) {
+      // Find relevant FAQs about application process
+      const relevantHelpFaqs = faqs.filter(faq =>
+        faq.question.toLowerCase().includes('apply') ||
+        faq.question.toLowerCase().includes('application') ||
+        faq.question.toLowerCase().includes('document') ||
+        faq.question.toLowerCase().includes('form') ||
+        faq.question.toLowerCase().includes('prepare') ||
+        faq.question.toLowerCase().includes('start')
+      );
+
+      if (relevantHelpFaqs.length > 0) {
+        // Prioritize these FAQs
+        faqs.length = 0;
+        faqs.push(...relevantHelpFaqs.slice(0, 3));
+      }
+    }
 
     if (!isOnTopic(query)) {
       return {
@@ -548,6 +586,14 @@ function App() {
                     language === 'zh' ? '很好的问题！这是我可以告诉你的：\n\n' :
                     'Câu hỏi hay! Đây là những gì tôi có thể nói với bạn:\n\n';
       response = intro + faqs[0].answer;
+
+      // Add helpful follow-up prompt
+      const followUp = language === 'en' ? '\n\n💬 Have more questions? I can help with:\n• Eligibility details\n• Step-by-step guidance\n• Required documents\n• Finding your local office\n\nJust ask!' :
+                       language === 'es' ? '\n\n💬 ¿Más preguntas? Puedo ayudar con:\n• Detalles de elegibilidad\n• Orientación paso a paso\n• Documentos requeridos\n• Encontrar tu oficina local\n\n¡Solo pregunta!' :
+                       language === 'zh' ? '\n\n💬 还有问题吗？我可以帮助：\n• 资格详情\n• 分步指导\n• 所需文件\n• 找到您当地的办公室\n\n尽管问！' :
+                       '\n\n💬 Có thêm câu hỏi? Tôi có thể giúp:\n• Chi tiết đủ điều kiện\n• Hướng dẫn từng bước\n• Tài liệu cần thiết\n• Tìm văn phòng địa phương của bạn\n\nCứ hỏi!';
+      response += followUp;
+
       if (programs.length > 0 || documents.length > 0) {
         response += '\n\n' + (language === 'en' ? '📚 I also found some helpful resources below that you might want to check out!' :
                                language === 'es' ? '📚 ¡También encontré algunos recursos útiles a continuación que quizás quieras revisar!' :
@@ -769,6 +815,13 @@ function App() {
     if (option.type === 'faq') {
       const faq = option.data as FAQ;
       responseContent = faq.answer;
+
+      // Add contextual follow-up based on FAQ content
+      const followUp = language === 'en' ? '\n\n💡 Need more help? I can also answer questions about:\n• Specific programs that might fit your situation\n• How to get started with your application\n• Where to find forms and documents\n• Contacting your local USDA office\n\nWhat else would you like to know?' :
+                       language === 'es' ? '\n\n💡 ¿Necesitas más ayuda? También puedo responder preguntas sobre:\n• Programas específicos que podrían adaptarse a tu situación\n• Cómo comenzar con tu solicitud\n• Dónde encontrar formularios y documentos\n• Contactar tu oficina local del USDA\n\n¿Qué más te gustaría saber?' :
+                       language === 'zh' ? '\n\n💡 需要更多帮助吗？我还可以回答以下问题：\n• 可能适合您情况的具体项目\n• 如何开始您的申请\n• 在哪里找到表格和文件\n• 联系您当地的USDA办公室\n\n您还想知道什么？' :
+                       '\n\n💡 Cần thêm trợ giúp? Tôi cũng có thể trả lời các câu hỏi về:\n• Các chương trình cụ thể có thể phù hợp với tình huống của bạn\n• Cách bắt đầu với đơn đăng ký của bạn\n• Tìm mẫu đơn và tài liệu ở đâu\n• Liên hệ văn phòng USDA địa phương của bạn\n\nBạn muốn biết gì khác?';
+      responseContent += followUp;
     } else if (option.type === 'program') {
       const program = option.data as Program;
 
@@ -793,10 +846,11 @@ function App() {
         responseContent += `\n\n🔗 Learn More: ${program.url}`;
       }
 
-      responseContent += language === 'en' ? '\n\nNeed help with your application or have questions? Just ask!' :
-                         language === 'es' ? '\n\n¿Necesitas ayuda con tu solicitud o tienes preguntas? ¡Sólo pregunta!' :
-                         language === 'zh' ? '\n\n需要申请帮助或有问题吗？只管问！' :
-                         '\n\nCần giúp đỡ với đơn đăng ký hoặc có câu hỏi? Cứ hỏi!';
+      // Add proactive follow-up suggestions based on the program
+      responseContent += language === 'en' ? '\n\n💡 What would you like to know more about?\n• Eligibility requirements\n• Application process\n• Required documents\n• Income limits\n• Timeline and next steps' :
+                         language === 'es' ? '\n\n💡 ¿Qué te gustaría saber más?\n• Requisitos de elegibilidad\n• Proceso de solicitud\n• Documentos requeridos\n• Límites de ingresos\n• Cronograma y próximos pasos' :
+                         language === 'zh' ? '\n\n💡 您想了解更多关于什么？\n• 资格要求\n• 申请流程\n• 所需文件\n• 收入限制\n• 时间表和后续步骤' :
+                         '\n\n💡 Bạn muốn biết thêm về điều gì?\n• Yêu cầu đủ điều kiện\n• Quy trình đăng ký\n• Tài liệu cần thiết\n• Giới hạn thu nhập\n• Thời gian và các bước tiếp theo';
     } else if (option.type === 'document') {
       const doc = option.data as Document;
       const intro = language === 'en' ? 'Here\'s the document you requested:\n\n' :
