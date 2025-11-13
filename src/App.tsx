@@ -224,11 +224,37 @@ function App() {
     const keywords: string[] = [];
     const lowerText = text.toLowerCase();
 
+    // Extract from predefined keywords
     ALL_KEYWORDS.forEach(keyword => {
       if (lowerText.includes(keyword.toLowerCase())) {
         keywords.push(keyword);
       }
     });
+
+    // Add important action keywords
+    const actionKeywords = ['eligibility', 'eligible', 'qualify', 'document', 'documents', 'form', 'forms',
+                            'apply', 'application', 'process', 'timeline', 'how long', 'time', 'income',
+                            'limit', 'requirements', 'need', 'help', 'assistance', 'paperwork', 'next steps'];
+
+    actionKeywords.forEach(keyword => {
+      if (lowerText.includes(keyword)) {
+        keywords.push(keyword);
+      }
+    });
+
+    // Add program-specific keywords
+    const programKeywords = ['502', '504', '515', '521', 'section 502', 'section 504', 'section 515',
+                             'b&i', 'reap', 'reconnect', 'dlt', 'vapg', 'community facilities',
+                             'direct loan', 'guaranteed loan', 'home repair', 'multi-family',
+                             'rental assistance', 'value-added', 'broadband', 'telemedicine',
+                             'distance learning', 'wastewater'];
+
+    programKeywords.forEach(keyword => {
+      if (lowerText.includes(keyword)) {
+        keywords.push(keyword);
+      }
+    });
+
     return [...new Set(keywords)];
   };
 
@@ -429,81 +455,109 @@ function App() {
 
     try {
       const detectedCategory = detectCategory(userQuery);
+      const lowerQuery = userQuery.toLowerCase();
 
-      // Select appropriate language columns
-      const questionCol = language === 'es' ? 'question_es' : language === 'zh' ? 'question_zh' : language === 'vi' ? 'question_vi' : null;
-      const answerCol = language === 'es' ? 'answer_es' : language === 'zh' ? 'answer_zh' : language === 'vi' ? 'answer_vi' : null;
+      // Get all search terms including original query words
+      const allSearchTerms = [...keywords, ...userQuery.toLowerCase().split(/\s+/).filter(word => word.length > 3)];
+      const uniqueTerms = [...new Set(allSearchTerms)];
 
-      const extraCols = [questionCol, answerCol].filter(Boolean).join(', ');
-      const selectStr = extraCols
-        ? `id, question, answer, category, ${extraCols}`
-        : `id, question, answer, category`;
-
-      let query = supabase
+      // Get all FAQs (we'll score them in memory for better matching)
+      const { data, error } = await supabase
         .from('faqs')
-        .select(selectStr);
-
-      if (detectedCategory) {
-        query = query.eq('category', detectedCategory);
-      }
-
-      // Build OR conditions for each keyword - search both English and translated fields
-      if (keywords.length > 0) {
-        const conditions = keywords.map(keyword => {
-          const baseConditions = `question.ilike.%${keyword}%,answer.ilike.%${keyword}%`;
-          // Also search translated fields if language is not English
-          if (language === 'es') {
-            return `${baseConditions},question_es.ilike.%${keyword}%,answer_es.ilike.%${keyword}%`;
-          } else if (language === 'zh') {
-            return `${baseConditions},question_zh.ilike.%${keyword}%,answer_zh.ilike.%${keyword}%`;
-          } else if (language === 'vi') {
-            return `${baseConditions},question_vi.ilike.%${keyword}%,answer_vi.ilike.%${keyword}%`;
-          }
-          return baseConditions;
-        }).join(',');
-
-        query = query.or(conditions);
-      }
-
-      const { data, error } = await query.limit(10);
+        .select('id, question, answer, category, keywords')
+        .limit(200);
 
       if (error) {
         console.error('FAQ search error:', error);
         return [];
       }
 
-      // Score by relevance, use translated fields if available
-      const scored = (data || []).map(faq => {
+      if (!data || data.length === 0) return [];
+
+      // Score by relevance with comprehensive matching
+      const scored = data.map(faq => {
         let score = 0;
-        const displayQuestion = (language === 'es' && faq.question_es) ? faq.question_es :
-                               (language === 'zh' && faq.question_zh) ? faq.question_zh :
-                               (language === 'vi' && faq.question_vi) ? faq.question_vi : faq.question;
-        const displayAnswer = (language === 'es' && faq.answer_es) ? faq.answer_es :
-                             (language === 'zh' && faq.answer_zh) ? faq.answer_zh :
-                             (language === 'vi' && faq.answer_vi) ? faq.answer_vi : faq.answer;
+        const lowerQuestion = faq.question?.toLowerCase() || '';
+        const lowerAnswer = faq.answer?.toLowerCase() || '';
+        const faqKeywords = Array.isArray(faq.keywords) ? faq.keywords.map((k: string) => k.toLowerCase()) : [];
 
-        if (detectedCategory && faq.category === detectedCategory) score += 20;
-
-        keywords.forEach(keyword => {
-          const lowerKeyword = keyword.toLowerCase();
-          if (faq.question?.toLowerCase().includes(lowerKeyword)) score += 10;
-          if (faq.answer?.toLowerCase().includes(lowerKeyword)) score += 3;
-        });
-
-        // If no keywords but we have a category match, give base score
-        if (keywords.length === 0 && detectedCategory && faq.category === detectedCategory) {
-          score = 5;
+        // Category match bonus
+        if (detectedCategory && faq.category === detectedCategory) {
+          score += 30;
         }
 
-        return {
-          ...faq,
-          question: displayQuestion,
-          answer: displayAnswer,
-          score
-        };
+        // Exact phrase match in question (highest priority)
+        if (lowerQuestion.includes(lowerQuery)) {
+          score += 50;
+        }
+
+        // Check each search term
+        uniqueTerms.forEach(term => {
+          const lowerTerm = term.toLowerCase();
+
+          // Question matches are most valuable
+          if (lowerQuestion.includes(lowerTerm)) {
+            score += 15;
+          }
+
+          // FAQ keywords matches
+          if (faqKeywords.some((kw: string) => kw.includes(lowerTerm) || lowerTerm.includes(kw))) {
+            score += 10;
+          }
+
+          // Answer matches
+          if (lowerAnswer.includes(lowerTerm)) {
+            score += 5;
+          }
+        });
+
+        // Special scoring for important question types
+        if (lowerQuery.includes('eligibility') || lowerQuery.includes('eligible') || lowerQuery.includes('qualify')) {
+          if (lowerQuestion.includes('eligibility') || lowerQuestion.includes('eligible')) {
+            score += 20;
+          }
+        }
+
+        if (lowerQuery.includes('document') || lowerQuery.includes('form') || lowerQuery.includes('paperwork')) {
+          if (lowerQuestion.includes('document') || lowerQuestion.includes('form')) {
+            score += 20;
+          }
+        }
+
+        if (lowerQuery.includes('process') || lowerQuery.includes('apply') || lowerQuery.includes('application')) {
+          if (lowerQuestion.includes('process') || lowerQuestion.includes('application') || lowerQuestion.includes('apply')) {
+            score += 20;
+          }
+        }
+
+        if (lowerQuery.includes('timeline') || lowerQuery.includes('how long') || lowerQuery.includes('time')) {
+          if (lowerQuestion.includes('timeline') || lowerQuestion.includes('long')) {
+            score += 20;
+          }
+        }
+
+        if (lowerQuery.includes('income') || lowerQuery.includes('limit')) {
+          if (lowerQuestion.includes('income')) {
+            score += 20;
+          }
+        }
+
+        // Program-specific matching
+        const programNames = ['502', '504', '515', '521', 'b&i', 'reap', 'reconnect', 'dlt', 'community facilities', 'water', 'wastewater', 'broadband'];
+        programNames.forEach(program => {
+          if (lowerQuery.includes(program) && (lowerQuestion.includes(program) || lowerAnswer.includes(program))) {
+            score += 25;
+          }
+        });
+
+        return { ...faq, score };
       });
 
-      return scored.filter(f => f.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+      // Return top scoring FAQs
+      return scored
+        .filter(f => f.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
     } catch (error) {
       console.error('FAQ search error:', error);
       return [];
