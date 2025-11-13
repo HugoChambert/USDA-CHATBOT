@@ -336,6 +336,9 @@ function App() {
         .from('programs')
         .select(selectStr);
 
+      // Filter by language
+      query = query.eq('language', language);
+
       // If we detected a specific category, filter by it first
       if (detectedCategory) {
         query = query.eq('category', detectedCategory);
@@ -419,7 +422,10 @@ function App() {
 
       let query = supabase
         .from('documents')
-        .select('id, title, description, document_url, document_type, category');
+        .select('id, title, description, document_url, document_type, category, language');
+
+      // Filter by current language
+      query = query.eq('language', language);
 
       if (detectedCategory) {
         query = query.eq('category', detectedCategory);
@@ -474,10 +480,11 @@ function App() {
       const allSearchTerms = [...keywords, ...userQuery.toLowerCase().split(/\s+/).filter(word => word.length > 3)];
       const uniqueTerms = [...new Set(allSearchTerms)];
 
-      // Get all FAQs (we'll score them in memory for better matching)
+      // Get all FAQs filtered by current language (we'll score them in memory for better matching)
       const { data, error } = await supabase
         .from('faqs')
-        .select('id, question, answer, category, keywords')
+        .select('id, question, answer, category, keywords, language')
+        .eq('language', language)
         .limit(200);
 
       if (error) {
