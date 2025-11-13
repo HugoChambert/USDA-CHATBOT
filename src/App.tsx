@@ -642,10 +642,10 @@ function App() {
       response = intro + faqs[0].answer;
 
       // Add helpful follow-up prompt
-      const followUp = language === 'en' ? '\n\n💬 Have more questions? I can help with:\n• Eligibility details\n• Step-by-step guidance\n• Required documents\n• Finding your local office\n\nJust ask!' :
-                       language === 'es' ? '\n\n💬 ¿Más preguntas? Puedo ayudar con:\n• Detalles de elegibilidad\n• Orientación paso a paso\n• Documentos requeridos\n• Encontrar tu oficina local\n\n¡Solo pregunta!' :
-                       language === 'zh' ? '\n\n💬 还有问题吗？我可以帮助：\n• 资格详情\n• 分步指导\n• 所需文件\n• 找到您当地的办公室\n\n尽管问！' :
-                       '\n\n💬 Có thêm câu hỏi? Tôi có thể giúp:\n• Chi tiết đủ điều kiện\n• Hướng dẫn từng bước\n• Tài liệu cần thiết\n• Tìm văn phòng địa phương của bạn\n\nCứ hỏi!';
+      const followUp = language === 'en' ? '\n\n💬 What else would you like to know? Ask me about:\n• Specific eligibility requirements\n• Application process details\n• Complete document lists\n• Timelines and next steps' :
+                       language === 'es' ? '\n\n💬 ¿Qué más te gustaría saber? Pregúntame sobre:\n• Requisitos específicos de elegibilidad\n• Detalles del proceso de solicitud\n• Listas completas de documentos\n• Plazos y próximos pasos' :
+                       language === 'zh' ? '\n\n💬 您还想知道什么？问我关于：\n• 具体资格要求\n• 申请流程细节\n• 完整文件清单\n• 时间表和后续步骤' :
+                       '\n\n💬 Bạn muốn biết gì khác? Hỏi tôi về:\n• Yêu cầu đủ điều kiện cụ thể\n• Chi tiết quy trình đăng ký\n• Danh sách tài liệu đầy đủ\n• Thời gian và các bước tiếp theo';
       response += followUp;
 
       if (programs.length > 0 || documents.length > 0) {
@@ -1040,23 +1040,24 @@ function App() {
                       {message.fileName}
                     </a>
                   )}
+                  {/* Show options for each assistant message */}
+                  {message.role === 'assistant' && message.options && message.options.length > 0 && (
+                    <div className="flex flex-col gap-2 mt-3">
+                      {message.options.map((option) => (
+                        <button
+                          key={option.id}
+                          onClick={() => handleOptionClick(option)}
+                          disabled={loading}
+                          className="bg-white border-2 border-slate-800 text-slate-800 px-3 py-2 rounded-2xl text-sm text-left hover:bg-slate-800 hover:text-white transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed break-words"
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
-            {messages.length > 0 && messages[messages.length - 1].options && (
-              <div className="flex flex-col gap-2 ml-8">
-                {messages[messages.length - 1].options!.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => handleOptionClick(option)}
-                    disabled={loading}
-                    className="bg-white border-2 border-slate-800 text-slate-800 px-3 py-2 rounded-2xl text-sm text-left hover:bg-slate-800 hover:text-white transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed break-words"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
             {loading && (
               <div className="flex gap-2 justify-start">
                 <div className="flex-shrink-0">
