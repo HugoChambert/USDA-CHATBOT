@@ -119,13 +119,13 @@ const CATEGORY_KEYWORDS = {
   ],
   community: [
     // English
-    'community', 'facilities', 'facility', 'health', 'healthcare', 'hospital', 'clinic', 'fire station', 'police', 'library', 'school', 'education', 'childcare', 'daycare', 'senior center', 'recreation', 'public safety', 'emergency services', 'telemedicine',
+    'community', 'facilities', 'facility', 'health', 'healthcare', 'hospital', 'clinic', 'medical', 'medical center', 'health center', 'fire station', 'police', 'library', 'school', 'education', 'childcare', 'daycare', 'senior center', 'recreation', 'public safety', 'emergency services', 'telemedicine', 'telehealth', 'mental health', 'behavioral health', 'substance abuse', 'treatment center', 'counseling', 'therapy', 'nursing home', 'assisted living', 'ambulance', 'emergency medical', 'rural health', 'healthcare access', 'medical equipment', 'distance learning', 'DLT', 'remote healthcare', 'specialist', 'consultation',
     // Spanish
-    'comunidad', 'instalaciones', 'salud', 'hospital', 'clínica', 'estación de bomberos', 'policía', 'biblioteca', 'escuela', 'educación', 'guardería', 'centro de ancianos', 'recreación', 'seguridad pública', 'telemedicina',
+    'comunidad', 'instalaciones', 'salud', 'hospital', 'clínica', 'médico', 'centro médico', 'estación de bomberos', 'policía', 'biblioteca', 'escuela', 'educación', 'guardería', 'centro de ancianos', 'recreación', 'seguridad pública', 'telemedicina', 'salud mental', 'abuso de sustancias', 'tratamiento', 'asesoramiento', 'hogar de ancianos', 'ambulancia',
     // Chinese
-    '社区', '设施', '卫生', '医疗', '医院', '诊所', '消防站', '警察', '图书馆', '学校', '教育', '托儿所', '老年中心', '娱乐', '公共安全', '远程医疗',
+    '社区', '设施', '卫生', '医疗', '医院', '诊所', '医疗中心', '消防站', '警察', '图书馆', '学校', '教育', '托儿所', '老年中心', '娱乐', '公共安全', '远程医疗', '心理健康', '药物滥用', '治疗', '咨询', '疗养院', '救护车',
     // Vietnamese
-    'cộng đồng', 'cơ sở vật chất', 'y tế', 'chăm sóc sức khỏe', 'bệnh viện', 'phòng khám', 'trạm cứu hỏa', 'cảnh sát', 'thư viện', 'trường học', 'giáo dục', 'trung tâm chăm sóc trẻ em', 'trung tâm người cao tuổi', 'giải trí', 'an toàn công cộng', 'y học từ xa'
+    'cộng đồng', 'cơ sở vật chất', 'y tế', 'chăm sóc sức khỏe', 'bệnh viện', 'phòng khám', 'trung tâm y tế', 'trạm cứu hỏa', 'cảnh sát', 'thư viện', 'trường học', 'giáo dục', 'trung tâm chăm sóc trẻ em', 'trung tâm người cao tuổi', 'giải trí', 'an toàn công cộng', 'y học từ xa', 'sức khỏe tâm thần', 'lạm dụng chất gây nghiện', 'điều trị', 'tư vấn', 'nhà dưỡng lão', 'xe cứu thương'
   ]
 };
 
@@ -250,6 +250,19 @@ function App() {
                              'distance learning', 'wastewater'];
 
     programKeywords.forEach(keyword => {
+      if (lowerText.includes(keyword)) {
+        keywords.push(keyword);
+      }
+    });
+
+    // Add healthcare-specific keywords
+    const healthcareKeywords = ['healthcare', 'health care', 'hospital', 'clinic', 'medical',
+                                'mental health', 'substance abuse', 'treatment', 'counseling',
+                                'therapy', 'telehealth', 'telemedicine', 'emergency services',
+                                'ambulance', 'nursing home', 'assisted living', 'rural health',
+                                'healthcare facility', 'medical center', 'health center'];
+
+    healthcareKeywords.forEach(keyword => {
       if (lowerText.includes(keyword)) {
         keywords.push(keyword);
       }
