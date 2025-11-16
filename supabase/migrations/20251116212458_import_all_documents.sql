@@ -1,0 +1,6 @@
+INSERT INTO documents (title, description, document_url, document_type, category, language) VALUES
+('1710B-1', 'Guide to Federal Financing Bank Loans guaranteed by RUS', 'https://www.rd.usda.gov/media/file/download/uep-bulletin-1710b-1.pdf', 'Bulletins', 'Utilities', 'en'),
+('1717B-2', 'Guide for Preparing Financial and Statistical Reports for Electric Distribution Borrowers (2/14/02)', 'https://www.rd.usda.gov/media/file/download/uep-bulletin-1717b-2.pdf', 'Bulletins', 'Utilities', 'en'),
+('1717B-3', 'Guide For Preparing Financial and Statistical Reports For Power Supply Borrowers and Electric Distribution Borrowers with Generating Facilities (5/12/06)', 'https://www.rd.usda.gov/media/file/download/uep-bulletin-1717b-3.pdf', 'Bulletins', 'Utilities', 'en'),
+('1717M-2', 'Sale or Transfer of Capital Assets by Electric Borrower (8/3/23)', 'https://www.rd.usda.gov/media/file/download/uep-bulletin-1717m-2.pdf', 'Bulletins', 'Utilities', 'en'),
+('1724D-101A', 'Electric System Long-Range Planning Guide (2/16/17)', 'https://www.rd.usda.gov/media/file/download/uep-bulletin-1724d-101a.pdf', 'Bulletins', 'Utilities', 'en');
