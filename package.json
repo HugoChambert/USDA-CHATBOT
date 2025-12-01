@@ -1,8 +1,9 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "usda-chatbot",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://hugochambert.github.io/USDA-CHATBOT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
