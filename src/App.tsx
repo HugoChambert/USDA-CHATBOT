@@ -337,7 +337,7 @@ function App() {
         .select(selectStr);
 
       // Filter by language
-      query = query.eq('language', language);
+      // query = query.eq('language', language);
 
       // If we detected a specific category, filter by it first
       if (detectedCategory) {
@@ -425,7 +425,7 @@ function App() {
         .select('id, title, description, document_url, document_type, category, language');
 
       // Filter by current language
-      query = query.eq('language', language);
+      // query = query.eq('language', language);
 
       if (detectedCategory) {
         query = query.eq('category', detectedCategory);
@@ -484,7 +484,7 @@ function App() {
       const { data, error } = await supabase
         .from('faqs')
         .select('id, question, answer, category, keywords, language')
-        .eq('language', language)
+        // .eq('language', language)
         .limit(200);
 
       if (error) {
