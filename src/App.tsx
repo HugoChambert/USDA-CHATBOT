@@ -961,7 +961,7 @@ function App() {
           className="fixed bottom-4 right-4 w-12 h-12 sm:w-14 sm:h-14 bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors animate-slide-up z-50"
           title="Open chat"
         >
-          <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Chat" className="w-6 h-6 sm:w-7 sm:h-7" />
+          <img src={`${import.meta.env.BASE_URL}img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg`} alt="Chat" className="w-6 h-6 sm:w-7 sm:h-7" />
         </button>
       )}
       {isOpen && (
@@ -982,7 +982,7 @@ function App() {
             onMouseDown={handleMouseDown}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <img src="/img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-4 sm:h-5 md:h-6 max-w-[120px] sm:max-w-[140px] md:max-w-none object-contain" />
+              <img src={`${import.meta.env.BASE_URL}img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg`} alt="USDA" className="h-4 sm:h-5 md:h-6 max-w-[120px] sm:max-w-[140px] md:max-w-none object-contain" />
             </div>
             <div className="flex items-center gap-1">
               <div className="relative" ref={languageMenuRef}>
@@ -1031,7 +1031,7 @@ function App() {
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0">
                     <div className="w-7 h-7 bg-slate-800 rounded-full flex items-center justify-center">
-                      <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-4 h-4" />
+                      <img src={`${import.meta.env.BASE_URL}img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg`} alt="Bot" className="w-4 h-4" />
                     </div>
                   </div>
                 )}
@@ -1082,7 +1082,7 @@ function App() {
               <div className="flex gap-2 justify-start">
                 <div className="flex-shrink-0">
                   <div className="w-7 h-7 bg-slate-800 rounded-full flex items-center justify-center">
-                    <img src="/img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg" alt="Bot" className="w-4 h-4" />
+                    <img src={`${import.meta.env.BASE_URL}img/owl_24dp_FFFFFF_FILL0_wght400_GRAD0_opsz24.svg`} alt="Bot" className="w-4 h-4" />
                   </div>
                 </div>
                 <div className="bg-white px-3 py-2 rounded-2xl shadow-sm border border-gray-200 relative" style={{ borderBottomLeftRadius: '4px' }}>
