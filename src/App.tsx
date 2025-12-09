@@ -982,7 +982,7 @@ function App() {
             onMouseDown={handleMouseDown}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <img src="./img/usda-logo-and-lockups/USDA v2 lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-4 sm:h-5 md:h-6 max-w-[120px] sm:max-w-[140px] md:max-w-none object-contain" />
+             <img src="./img/usda-logo-and-lockups/USDA%20v2%20lockup/white/usda-v2-white-lockup.svg" alt="USDA" className="h-4 sm:h-5 md:h-6 max-w-[120px] sm:max-w-[140px] md:max-w-none object-contain" />
             </div>
             <div className="flex items-center gap-1">
               <div className="relative" ref={languageMenuRef}>
